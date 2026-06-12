@@ -1,0 +1,51 @@
+Test Results for Model: convnext-tiny-v2
+==========================================
+Device: cuda
+Checkpoints: C:\Users\internal.research\Desktop\MarouaneBenHajHassineCapstone\SynthInv\synthInvV2\checkpoints\convnext-tiny-v2
+
+Testing Split 0...
+ -> MAE: 0.0666
+    Running MSS (N=150)...
+
+Testing Split 1...
+ -> MAE: 0.0666
+    Running MSS (N=150)...
+
+Testing Split 2...
+ -> MAE: 0.0668
+    Running MSS (N=150)...
+
+Testing Split 3...
+ -> MAE: 0.0664
+    Running MSS (N=150)...
+
+Testing Split 4...
+ -> MAE: 0.0661
+    Running MSS (N=150)...
+
+==========================================
+   RESULTS: convnext-tiny-v2
+==========================================
+Average Test MAE: 0.0665 ± 0.0002
+Best Split: 4 (0.0661)
+
+Detailed Breakdown (Best Split):
+ oscillator_1_wave_frame            : 0.1209
+ oscillator_1_level                 : 0.0989
+ oscillator_1_unison_voices         : 0.1010
+ oscillator_1_unison_detune         : 0.0789
+ oscillator_2_wave_frame            : 0.1508
+ oscillator_2_level                 : 0.1081
+ oscillator_2_transpose             : 0.0622
+ envelope_1_attack                  : 0.0184
+ envelope_1_decay                   : 0.0155
+ envelope_2_attack                  : 0.0343
+ envelope_2_decay                   : 0.0277
+ filter_1_cutoff                    : 0.0378
+ filter_1_resonance                 : 0.0665
+ sample_level                       : 0.0583
+ modulation_1_amount                : 0.0359
+ reverb_mix                         : 0.0426
+MSS evaluation failed (Vital unavailable or no valid samples).
+
+Results saved to: C:\Users\internal.research\Desktop\MarouaneBenHajHassineCapstone\SynthInv\synthInvV2\checkpoints\convnext-tiny-v2\test_results.txt

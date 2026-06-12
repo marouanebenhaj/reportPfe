@@ -1,0 +1,43 @@
+Test Results for Model: ast-small (Exp: no_pitch)
+==========================================
+Device: cuda
+Reading checkpoints from: C:\Users\internal.research\Desktop\MarouaneBenHajHassineCapstone\SynthInv\pfe\checkpoints\ast-small_no_pitch
+
+Testing Split 0...
+ -> MAE: 0.0786
+
+Testing Split 1...
+ -> MAE: 0.0790
+
+Testing Split 2...
+ -> MAE: 0.0804
+
+Testing Split 3...
+ -> MAE: 0.0796
+
+Testing Split 4...
+ -> MAE: 0.0790
+
+========================================
+   RESULTS: ast-small_no_pitch
+========================================
+Average Test MAE: 0.0793 ± 0.0006
+Best Split: 0 (0.0786)
+
+Detailed Breakdown (Best Split):
+ oscillator_1_wave_frame       : 0.1410
+ oscillator_1_level            : 0.1182
+ oscillator_1_unison_voices    : 0.1224
+ oscillator_1_unison_detune    : 0.0934
+ oscillator_2_wave_frame       : 0.1627
+ oscillator_2_level            : 0.1347
+ oscillator_2_transpose        : 0.1116
+ sample_level                  : 0.0868
+ envelope_1_attack             : 0.0216
+ envelope_1_decay              : 0.0168
+ filter_1_cutoff               : 0.0397
+ filter_1_resonance            : 0.0728
+ modulation_1_amount           : 0.0325
+ envelope_2_attack             : 0.0334
+ envelope_2_decay              : 0.0248
+ reverb_mix                    : 0.0460

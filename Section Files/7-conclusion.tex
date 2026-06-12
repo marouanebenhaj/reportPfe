@@ -1,0 +1,45 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Conclusion                    %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{CONCLUSION}
+\label{sec:conclusion}
+
+\subsection{Summary of Findings}
+
+\noindent
+This study investigated the feasibility of learning the inverse mapping from audio to synthesizer parameters for the Vital wavetable synthesizer, using a supervised regression framework built around pre-trained vision backbones and a programmatically generated dataset. Three consecutive iterations — each corresponding to a full Design Science Research cycle of problem investigation, solution design, implementation, and evaluation — progressively refined both the model architecture and the training data regime.
+
+\noindent \newline
+\textbf{Architecture (RQ1).} At the 42{,}000-sample scale used in V1 and V2, ConvNeXt-tiny outperforms AST-small: the best V2 ConvNeXt result is $0.0665 \pm 0.0002$ MAE versus $0.0713 \pm 0.0003$ for AST, a $6.8\%$ relative gap. The convolutional inductive biases of ConvNeXt provide an advantage at limited data by efficiently capturing the local spectral patterns of synthesized audio. However, at the 160{,}000-sample scale of V3, AST-small overtakes ConvNeXt-tiny on both parameter-space MAE ($0.0525$ vs $0.0530$) and Multi-Scale Spectral loss ($1.096$ vs $1.222$). The $11.5\%$ MSS advantage of AST in V3 is larger than its $0.9\%$ MAE advantage, indicating that global self-attention captures inter-harmonic dependencies that convolutions underfit, and that these dependencies are perceptually significant.
+
+\noindent \newline
+\textbf{Multi-scale input (RQ2).} The V1-to-V2 transition, which introduces a three-scale mel-spectrogram input alongside the grouped prediction head, weighted loss, and FiLM conditioning, reduces MAE by $12.3\%$ for ConvNeXt and $10.1\%$ for AST compared to the best comparable V1 configurations. The multi-scale representation stacks fine ($n_\text{fft}=512$), mid ($n_\text{fft}=2048$), and coarse ($n_\text{fft}=8192$) spectrograms as a three-channel tensor, providing simultaneous coverage of transient temporal events, timbral midrange, and harmonic structure. Per-parameter analysis supports the multi-scale hypothesis: envelope parameters benefit from the fine channel's temporal resolution, while wave-frame parameters benefit from the coarse channel's spectral resolution.
+
+\noindent \newline
+\textbf{FiLM conditioning (RQ3).} FiLM pitch conditioning provides only marginal gains in V2, where each preset is rendered at a single MIDI note: $+2.4\%$ for ConvNeXt and $+1.9\%$ for AST. In V3, rendering each preset at three MIDI pitches amplifies the benefit: $+3.7\%$ for ConvNeXt and $+6.3\%$ for AST. The parameter that benefits most is \texttt{oscillator\_2\_transpose} ($-20.2\%$ under V3 AST), which is pitch-dependent by definition. The pattern of per-parameter FiLM gains — largest for oscillator pitch-coherent parameters, negligible for \texttt{reverb\_mix} — confirms that the FiLM pathway learns physically meaningful pitch-parameter relationships rather than applying generic regularisation, and that multi-pitch training data is a necessary condition for this learning to occur.
+
+\subsection{Contributions}
+
+\noindent
+This study makes the following contributions to the field of synthesizer parameter estimation:
+
+\begin{itemize}
+    \item[$\blacksquare$] A programmatic dataset generation pipeline for the Vital wavetable synthesizer, producing approximately 160{,}000 labelled audio-parameter pairs across five timbre classes and multiple pitch registers, made available as a reproducible research artefact.
+
+    \item[$\blacksquare$] A systematic comparison of three neural architecture families — residual CNN, ConvNeXt, and AST — across three iterations of increasing data scale and architectural complexity, establishing clear data-regime-dependent rankings.
+
+    \item[$\blacksquare$] A demonstration that three-scale mel-spectrogram input (fine, mid, coarse) and a grouped prediction head with oscillator-weighted loss together deliver a consistent improvement over single-scale, flat-head baselines on this task.
+
+    \item[$\blacksquare$] An empirical analysis of FiLM pitch conditioning under two data regimes, showing that multi-pitch rendering is a necessary and sufficient condition for pitch conditioning to provide a meaningful benefit, and identifying the specific parameters — especially oscillator transpose — whose estimation most benefits from this design choice.
+
+    \item[$\blacksquare$] An independently-validated evaluation protocol using a Multi-Scale Spectral loss computed through Vital re-rendering, demonstrating that parameter-space accuracy translates to perceptual audio quality and quantifying the gap between V2 and V3 in both domains.
+\end{itemize}
+
+\subsection{Concluding Remarks}
+
+\noindent
+The results of this study confirm that synthesizer parameter estimation for a modern wavetable synthesizer is learnable to a practically useful degree with supervised deep learning, and that the choice of input representation, architecture, and training data each play distinct and quantifiable roles. A mean absolute error of $0.0525$ across 16 normalised parameters — corresponding to an average prediction error of roughly $5.3\%$ of each parameter's full range — represents a strong result for a task that has no closed-form solution and is constrained by the fundamental ill-posedness of the audio-to-parameter inverse mapping.
+
+\noindent \newline
+At the same time, the limitations described in Section~\ref{sec:discussion} are real: sixteen parameters is a fraction of the full synthesizer's expressiveness, training and evaluation are conducted entirely on synthetic audio, and the non-differentiability of Vital prevents audio-space supervision. The most important structural problem — that the model cannot be trained to minimise perceptual error — is also the most tractable one. A differentiable proxy for Vital would transform this study's pipeline from a parameter-regression system into a full audio-matching system, removing the dependency on manually defined parameter-space losses and opening the door to end-to-end audio-domain optimisation. The longer-term vision of a universal differentiable synthesizer would extend this capability across instrument families, potentially making synthesizer parameter estimation an accessible tool for any synthesizer, any genre, and any user.

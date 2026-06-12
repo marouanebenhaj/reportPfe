@@ -1,0 +1,75 @@
+Training convnext-tiny-v2
+========================================
+multiscale=True  weighted_loss=True  specaugment=True
+Device: cuda | Checkpoints: C:\Users\internal.research\Desktop\MarouaneBenHajHassineCapstone\SynthInv\synthInvV3\checkpoints\convnext-tiny-v2
+Total params: 34,308,592  Trainable: 34,308,592
+SpecAugment: True
+Train samples: 133994  Eval samples: 16803
+Ep 01/40: Train=0.1989  Eval=0.1119  VRAM=1.7GB
+  -> Saved best: 0.1119
+Ep 02/40: Train=0.1555  Eval=0.0933  VRAM=17.6GB
+  -> Saved best: 0.0933
+Ep 03/40: Train=0.1368  Eval=0.0839  VRAM=17.6GB
+  -> Saved best: 0.0839
+Ep 04/40: Train=0.1239  Eval=0.0790  VRAM=17.6GB
+  -> Saved best: 0.0790
+Ep 05/40: Train=0.1149  Eval=0.0742  VRAM=17.6GB
+  -> Saved best: 0.0742
+Ep 06/40: Train=0.1084  Eval=0.0706  VRAM=17.6GB
+  -> Saved best: 0.0706
+Ep 07/40: Train=0.1029  Eval=0.0693  VRAM=17.6GB
+  -> Saved best: 0.0693
+Ep 08/40: Train=0.0992  Eval=0.0689  VRAM=17.6GB
+  -> Saved best: 0.0689
+Ep 09/40: Train=0.0961  Eval=0.0674  VRAM=17.6GB
+  -> Saved best: 0.0674
+Ep 10/40: Train=0.0932  Eval=0.0645  VRAM=17.6GB
+  -> Saved best: 0.0645
+Ep 11/40: Train=0.0904  Eval=0.0646  VRAM=17.6GB
+Ep 12/40: Train=0.0876  Eval=0.0636  VRAM=17.6GB
+  -> Saved best: 0.0636
+Ep 13/40: Train=0.0844  Eval=0.0631  VRAM=17.6GB
+  -> Saved best: 0.0631
+Ep 14/40: Train=0.0811  Eval=0.0610  VRAM=17.6GB
+  -> Saved best: 0.0610
+Ep 15/40: Train=0.0779  Eval=0.0593  VRAM=17.6GB
+  -> Saved best: 0.0593
+Ep 16/40: Train=0.0749  Eval=0.0600  VRAM=17.6GB
+Ep 17/40: Train=0.0716  Eval=0.0605  VRAM=17.6GB
+Ep 18/40: Train=0.0680  Eval=0.0586  VRAM=17.6GB
+  -> Saved best: 0.0586
+Ep 19/40: Train=0.0642  Eval=0.0581  VRAM=17.6GB
+  -> Saved best: 0.0581
+Ep 20/40: Train=0.0602  Eval=0.0575  VRAM=17.6GB
+  -> Saved best: 0.0575
+Ep 21/40: Train=0.0561  Eval=0.0569  VRAM=17.6GB
+  -> Saved best: 0.0569
+Ep 22/40: Train=0.0520  Eval=0.0572  VRAM=17.6GB
+Ep 23/40: Train=0.0481  Eval=0.0562  VRAM=17.6GB
+  -> Saved best: 0.0562
+Ep 24/40: Train=0.0439  Eval=0.0560  VRAM=17.6GB
+  -> Saved best: 0.0560
+Ep 25/40: Train=0.0402  Eval=0.0554  VRAM=17.6GB
+  -> Saved best: 0.0554
+Ep 26/40: Train=0.0362  Eval=0.0551  VRAM=17.6GB
+  -> Saved best: 0.0551
+Ep 27/40: Train=0.0327  Eval=0.0545  VRAM=17.6GB
+  -> Saved best: 0.0545
+Ep 28/40: Train=0.0294  Eval=0.0540  VRAM=17.6GB
+  -> Saved best: 0.0540
+Ep 29/40: Train=0.0264  Eval=0.0546  VRAM=17.6GB
+Ep 30/40: Train=0.0238  Eval=0.0539  VRAM=17.6GB
+  -> Saved best: 0.0539
+Ep 31/40: Train=0.0212  Eval=0.0534  VRAM=17.6GB
+  -> Saved best: 0.0534
+Ep 32/40: Train=0.0191  Eval=0.0536  VRAM=17.6GB
+Ep 33/40: Train=0.0174  Eval=0.0536  VRAM=17.6GB
+Ep 34/40: Train=0.0159  Eval=0.0536  VRAM=17.6GB
+Ep 35/40: Train=0.0146  Eval=0.0536  VRAM=17.6GB
+Ep 36/40: Train=0.0136  Eval=0.0538  VRAM=17.6GB
+Ep 37/40: Train=0.0130  Eval=0.0538  VRAM=17.6GB
+Ep 38/40: Train=0.0125  Eval=0.0537  VRAM=17.6GB
+Ep 39/40: Train=0.0121  Eval=0.0538  VRAM=17.6GB
+Ep 40/40: Train=0.0120  Eval=0.0537  VRAM=17.6GB
+
+Training complete.

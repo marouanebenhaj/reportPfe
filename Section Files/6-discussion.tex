@@ -1,0 +1,210 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Discussion                    %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{DISCUSSION}
+\label{sec:discussion}
+
+\noindent
+This chapter synthesises the empirical findings from the three iterations into coherent answers to the three research questions posed in Section~\ref{sec:introduction}, examines per-parameter trends that cross-cut all iterations, and provides a critical assessment of the study's validity and limitations. It concludes with concrete directions for future research that address the structural gaps identified here.
+
+% ═══════════════════════════════════════════════════════════
+\subsection{Addressing the Research Questions}
+
+\subsubsection{RQ1 — Architecture Comparison}
+
+\noindent
+\textbf{RQ1:} \textit{How do convolutional architectures compare to the Audio Spectrogram Transformer in regressing synthesizer parameters from mel-spectrograms?}
+
+\noindent \newline
+The answer to RQ1 is scale-dependent: ConvNeXt-tiny outperforms AST-small at approximately 42{,}000 training samples, but AST-small overtakes ConvNeXt-tiny when the dataset grows to approximately 160{,}000 samples. In V1, the best convolutional result (ConvNeXt-tiny with sinusoidal pitch, $\text{MAE} = 0.0758$) surpasses the no-pitch AST baseline ($0.0793$), consistent with the intuition that local convolutional feature extraction is well-matched to the hierarchical spectral structures of synthesized audio — harmonic stacks, filter roll-offs, and envelope transients are all spatially local patterns that convolutions detect efficiently. In V2, after upgrading to multi-scale input and the enhanced training configuration, ConvNeXt retains its advantage ($0.0665 \pm 0.0002$ vs $0.0713 \pm 0.0003$ for AST-small, a $6.8\%$ relative gap). However, in V3, AST-small reverses this ordering, achieving MAE $0.0525$ against ConvNeXt's $0.0530$ on the shared evaluation set — a narrow $0.9\%$ advantage in parameter space that widens substantially when measured via the Multi-Scale Spectral loss: $1.096$ for AST versus $1.222$ for ConvNeXt, an $11.5\%$ gap.
+
+\noindent \newline
+This reversal is consistent with the well-established data-scaling behaviour of Vision Transformers \cite{dosovitskiy2021vit}: global self-attention over the full time-frequency plane requires sufficient training examples to learn meaningful inter-frequency dependencies, such as the harmonic series structure of pitched sounds, rather than over-fitting to local texture. At 42{,}000 samples, ConvNeXt's inductive biases provide a decisive advantage; at 160{,}000 samples, the expressive capacity of self-attention begins to pay off. The disproportionately large MSS advantage of AST at V3 — relative to its smaller MAE advantage — further suggests that global attention captures perceptually relevant inter-harmonic relationships that local convolutions underfit, even when average parameter-space error is similar.
+
+\noindent \newline
+These findings extend the comparison of Bruford et al.\ \cite{bruford2024ast}, who demonstrated AST's competitiveness on Massive without examining convolutional alternatives or the effect of dataset scale. This study establishes that ConvNeXt is the preferred architecture at limited data budgets, and that AST's advantage materialises only when the dataset is large enough to train its global attention patterns effectively.
+
+% -----------------------------------------------------------
+\subsubsection{RQ2 — Multi-Scale Mel Representation}
+
+\noindent
+\textbf{RQ2:} \textit{Does a three-scale mel-spectrogram improve synthesizer parameter estimation over a single-scale input?}
+
+\noindent \newline
+The V1-to-V2 transition provides the primary evidence for RQ2. The V1 baseline uses a single mid-scale mel spectrogram ($n_{\text{fft}}=2048$, hop $=512$); V2 stacks three scales — fine ($n_{\text{fft}}=512$), mid, and coarse ($n_{\text{fft}}=8192$) — as a three-channel input. Comparing the strongest comparable configurations between versions: ConvNeXt with sinusoidal pitch conditioning improves from $0.0758$ (V1) to $0.0665$ (V2), a $12.3\%$ reduction in MAE; AST improves from $0.0793$ (no-pitch baseline) to $0.0713$ (V2 with FiLM), a $10.1\%$ reduction. Because V2 simultaneously introduces the grouped prediction head, weighted SmoothL1 loss, and FiLM conditioning alongside the multi-scale input, these gains cannot be attributed to multi-scale input alone. The multi-scale ablation variant (\texttt{convnext-tiny-v2-mid}) was designed to isolate this contribution but was not completed within the compute budget of this project; the exact per-factor decomposition therefore remains an open question.
+
+\noindent \newline
+Despite the inability to isolate the contribution precisely, the design rationale remains well-grounded: different synthesis parameters manifest at different time-frequency scales. Envelope attack and decay shapes are temporally localised events that require the fine scale's high temporal resolution to capture accurately; the harmonic series structure of an oscillator waveform is most legible at the coarse scale's high spectral resolution, where individual harmonics are resolved; the mid scale provides the balanced representation needed for filter cutoff and resonance. The per-parameter analysis in Section~\ref{sec:per_param} provides supporting evidence: envelope parameters (which benefit most from the fine scale) and wave-frame parameters (which benefit most from the coarse scale) both show large V1-to-V3 improvements, consistent with the multi-scale hypothesis.
+
+% -----------------------------------------------------------
+\subsubsection{RQ3 — FiLM Pitch Conditioning and Data Diversity}
+
+\noindent
+\textbf{RQ3:} \textit{Under what conditions does FiLM pitch conditioning improve parameter estimation, and why does its effectiveness depend on training data?}
+
+\noindent \newline
+V2 and V3 together provide a controlled test of this question. In V2, where each preset is rendered at a single randomly drawn MIDI note, FiLM conditioning provides only marginal gains: $+2.4\%$ for ConvNeXt ($0.0681 \to 0.0665$) and $+1.9\%$ for AST ($0.0727 \to 0.0713$). In V3, where each preset is rendered at three fixed pitches spanning the timbre's register, the benefit grows to $+3.7\%$ for ConvNeXt ($0.0550 \to 0.0530$) and $+6.3\%$ for AST ($0.0560 \to 0.0525$). The increase in the FiLM gap from V2 to V3 directly validates the hypothesis stated in Section~\ref{sec:introduction}: rendering each preset at only one pitch provides no contrastive signal across the pitch input, leaving the FiLM pathway poorly trained; rendering the same parameter vector at multiple spectral positions forces the model to use pitch to explain the cross-pitch spectral differences while maintaining consistent parameter predictions.
+
+\noindent \newline
+The per-parameter breakdown makes this mechanism concrete. Table~\ref{tab:film_gap} reports the MAE of the V3 AST-small model for both FiLM and no-pitch variants, together with the relative gain from FiLM conditioning. The parameter that benefits most is \texttt{oscillator\_2\_transpose} ($-20.2\%$), which is physically expected: the transpose parameter shifts the second oscillator's fundamental relative to the playing pitch, so its correct value is defined relative to the input MIDI note by design — exactly the relationship that FiLM is intended to encode. The next largest gains are for \texttt{oscillator\_1\_unison\_voices} ($-7.6\%$) and \texttt{oscillator\_1\_unison\_detune} ($-6.7\%$), both of which interact with the pitch-derived harmonic series: the number of unison voices and their detuning alter the beating pattern above the fundamental in a way that depends on where that fundamental sits in the mel frequency axis. In contrast, parameters with no pitch dependence — notably \texttt{reverb\_mix} — show negligible or inverted FiLM effect ($+0.3\%$, within measurement noise), confirming that the FiLM pathway learns physically meaningful pitch-parameter relationships rather than applying a generic regularisation.
+
+\begin{table}[H]
+\centering
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{llccc}
+\hline
+\textbf{Parameter} & \textbf{Group} & \textbf{FiLM} & \textbf{No-pitch} & \textbf{FiLM gain} \\
+\hline
+\texttt{osc\_2\_transpose}       & Oscillator & 0.0308 & 0.0386 & $-$20.2\% \\
+\texttt{osc\_1\_unison\_voices}  & Oscillator & 0.1022 & 0.1106 & $-$7.6\% \\
+\texttt{osc\_1\_unison\_detune}  & Oscillator & 0.0681 & 0.0730 & $-$6.7\% \\
+\texttt{osc\_1\_level}           & Oscillator & 0.0823 & 0.0877 & $-$6.1\% \\
+\texttt{osc\_2\_level}           & Oscillator & 0.0868 & 0.0921 & $-$5.8\% \\
+\texttt{osc\_1\_wave\_frame}     & Oscillator & 0.1015 & 0.1070 & $-$5.1\% \\
+\texttt{osc\_2\_wave\_frame}     & Oscillator & 0.1205 & 0.1268 & $-$5.0\% \\
+\hline
+\texttt{envelope\_1\_attack}     & Envelope   & 0.0117 & 0.0141 & $-$17.0\% \\
+\texttt{envelope\_2\_decay}      & Envelope   & 0.0213 & 0.0222 & $-$4.1\% \\
+\texttt{envelope\_2\_attack}     & Envelope   & 0.0237 & 0.0246 & $-$3.7\% \\
+\texttt{envelope\_1\_decay}      & Envelope   & 0.0103 & 0.0106 & $-$2.8\% \\
+\hline
+\texttt{filter\_1\_cutoff}       & Filter     & 0.0294 & 0.0309 & $-$4.9\% \\
+\texttt{filter\_1\_resonance}    & Filter     & 0.0498 & 0.0523 & $-$4.8\% \\
+\hline
+\texttt{sample\_level}           & Misc       & 0.0457 & 0.0484 & $-$5.6\% \\
+\texttt{modulation\_1\_amount}   & Misc       & 0.0290 & 0.0299 & $-$3.1\% \\
+\texttt{reverb\_mix}             & Misc       & 0.0266 & 0.0265 & $+$0.3\% \\
+\hline
+\end{tabular}
+\vspace{0.3cm}
+\caption{Per-parameter MAE for the best V3 model (AST-small with FiLM vs no-pitch variant) on the shared evaluation set. The FiLM gain column reports the relative change; negative values indicate improvement from pitch conditioning. Parameters are grouped by synthesis stage and sorted within each group by FiLM gain magnitude.}
+\label{tab:film_gap}
+\end{table}
+
+% ═══════════════════════════════════════════════════════════
+\subsection{Per-Parameter Analysis}
+\label{sec:per_param}
+
+\noindent
+Table~\ref{tab:per_param_full} reports the per-parameter MAE of the V1 AST-small no-pitch baseline and the best V3 model (AST-small with FiLM), together with the percentage improvement across the full three-iteration study. The oscillator group presents the clearest pattern: wave-frame parameters are consistently the hardest to estimate, while envelope timing parameters are the easiest.
+
+\begin{table}[H]
+\centering
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{llccc}
+\hline
+\textbf{Parameter} & \textbf{Group} & \textbf{V1 MAE} & \textbf{V3 MAE} & \textbf{Improvement} \\
+\hline
+\texttt{osc\_1\_wave\_frame}     & Oscillator & 0.1410 & 0.1015 & 28.0\% \\
+\texttt{osc\_1\_level}           & Oscillator & 0.1182 & 0.0823 & 30.4\% \\
+\texttt{osc\_1\_unison\_voices}  & Oscillator & 0.1224 & 0.1022 & 16.5\% \\
+\texttt{osc\_1\_unison\_detune}  & Oscillator & 0.0934 & 0.0681 & 27.1\% \\
+\texttt{osc\_2\_wave\_frame}     & Oscillator & 0.1627 & 0.1205 & 25.9\% \\
+\texttt{osc\_2\_level}           & Oscillator & 0.1347 & 0.0868 & 35.6\% \\
+\texttt{osc\_2\_transpose}       & Oscillator & 0.1116 & 0.0308 & \textbf{72.4\%} \\
+\hline
+\texttt{envelope\_1\_attack}     & Envelope   & 0.0216 & 0.0117 & 45.8\% \\
+\texttt{envelope\_1\_decay}      & Envelope   & 0.0168 & 0.0103 & 38.7\% \\
+\texttt{envelope\_2\_attack}     & Envelope   & 0.0334 & 0.0237 & 29.0\% \\
+\texttt{envelope\_2\_decay}      & Envelope   & 0.0248 & 0.0213 & 14.1\% \\
+\hline
+\texttt{filter\_1\_cutoff}       & Filter     & 0.0397 & 0.0294 & 26.0\% \\
+\texttt{filter\_1\_resonance}    & Filter     & 0.0728 & 0.0498 & 31.6\% \\
+\hline
+\texttt{sample\_level}           & Misc       & 0.0868 & 0.0457 & 47.4\% \\
+\texttt{modulation\_1\_amount}   & Misc       & 0.0325 & 0.0290 & 10.8\% \\
+\texttt{reverb\_mix}             & Misc       & 0.0460 & 0.0266 & 42.2\% \\
+\hline
+\end{tabular}
+\vspace{0.3cm}
+\caption{Per-parameter MAE comparison between the V1 no-pitch AST-small baseline and the best V3 model (AST-small with FiLM) on the shared evaluation set. V1 figures are taken from the best split of the five-fold cross-validation. The largest single-parameter improvement, \texttt{osc\_2\_transpose} ($72.4\%$), reflects the combined effect of multi-pitch data diversity and FiLM conditioning.}
+\label{tab:per_param_full}
+\end{table}
+
+\noindent
+\textbf{Wave-frame parameters.} Both \texttt{osc\_2\_wave\_frame} (V3 MAE $0.1205$) and \texttt{osc\_1\_wave\_frame} ($0.1015$) remain the hardest parameters to estimate after three iterations of improvement. This reflects a fundamental property of wavetable synthesis: the wavetable position is a continuous index over a high-dimensional manifold of waveforms, many of which produce perceptually similar timbres in adjacent positions and very different timbres elsewhere. The relationship between the wavetable index and the mel spectrogram is highly non-injective — two different wavetable positions may sound nearly identical at a given pitch and with a given filter — making the inverse estimation problem inherently ill-posed for this parameter. The parameter-space loss function cannot account for this perceptual non-linearity; an audio-space loss would be needed to penalise only perceptually meaningful prediction errors. Despite this, the V1-to-V3 improvement for both wave-frame parameters is substantial (28\% and 26\% respectively), confirming that the model does learn useful spectral representations even for these hard cases.
+
+\noindent \newline
+\textbf{Oscillator transpose.} \texttt{osc\_2\_transpose} improves by $72.4\%$ from V1 to V3 — by far the largest per-parameter gain in the study. In V1, without pitch conditioning, the model cannot distinguish a note played at C4 with a $+7$-semitone transpose from one played at G4 with a $0$-semitone transpose, as both produce a G4 fundamental; the transpose MAE of $0.1116$ reflects this ambiguity directly. In V3, the FiLM conditioning and multi-pitch training resolve the ambiguity: the model observes the same preset at three distinct MIDI notes and is forced to use the pitch input to maintain consistent transpose predictions across all three. The residual error of $0.0308$ ($3.1$ normalised units, corresponding to roughly $\pm 3$ semitones in the normalised range) represents the remaining ambiguity when the pitch conditioning signal cannot fully resolve the inversion.
+
+\noindent \newline
+\textbf{Envelope parameters.} Envelope times are consistently the easiest to estimate. \texttt{envelope\_1\_decay} achieves MAE $0.0103$ in V3 — the lowest of all 16 parameters — and \texttt{envelope\_1\_attack} reaches $0.0117$. The amplitude envelope (Envelope~1) shapes the temporal energy profile of the 4-second clip directly: attack controls the onset ramp and decay sets the sustain approach, both of which are temporally distinct events clearly visible in the fine-scale spectrogram. The filter envelope (Envelope~2) is harder ($0.0237$ for attack, $0.0213$ for decay) because its effect on the filter cutoff sweep is modulated by \texttt{modulation\_1\_amount} and by the filter's own cutoff and resonance — it does not act in isolation. Notably, \texttt{envelope\_1\_attack} shows the second-largest FiLM benefit ($-17.0\%$) in Table~\ref{tab:film_gap}, which is surprising given that attack timing is not fundamentally pitch-dependent. This may reflect indirect conditioning: the FiLM pathway modulates the entire feature map, and a better-calibrated representation of pitch-related spectral structure could also improve discriminability for temporally localised envelope features.
+
+\noindent \newline
+\textbf{Filter resonance.} \texttt{filter\_1\_resonance} (V3 MAE $0.0498$) remains substantially harder than \texttt{filter\_1\_cutoff} ($0.0294$), despite both being filter parameters. Resonance adds a spectral peak at the cutoff frequency whose perceptual prominence depends jointly on the cutoff position, the oscillator harmonics present at that frequency, and the envelope modulation depth. The interaction with other parameters makes resonance estimation inherently harder than cutoff, which produces a more global roll-off that is visible regardless of the harmonic content.
+
+\noindent \newline
+\textbf{Modulation amount.} \texttt{modulation\_1\_amount} ($0.0290$ in V3) is the parameter that benefits least from the full V1-to-V3 pipeline ($10.8\%$ improvement). Modulation amount controls the depth of the filter envelope sweep: at zero, the filter does not sweep at all; at one, the cutoff sweeps across its full range. The relationship to the mel spectrogram is indirect and depends on the filter cutoff, envelope decay, and resonance simultaneously — a confound that neither more data nor better conditioning can fully resolve without a higher-capacity model or an audio-space loss.
+
+% ═══════════════════════════════════════════════════════════
+\subsection{The MSS Metric as a Perceptual Complement}
+
+\noindent
+The Multi-Scale Spectral (MSS) loss provides an independent validation of the parameter-space MAE results. Because MSS is computed by re-rendering the predicted parameters through Vital and comparing the resulting audio to the original clip at four FFT scales, it penalises errors in the audio domain rather than in the abstract parameter space. Table~\ref{tab:mss_summary} summarises the MSS results for all four V2 and V3 models on the shared evaluation set.
+
+\begin{table}[H]
+\centering
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{lcccccc}
+\hline
+\textbf{Model} & \textbf{MAE} & \textbf{MSS avg} & \textbf{$n_\text{fft}$=8192} & \textbf{$n_\text{fft}$=2048} & \textbf{$n_\text{fft}$=512} & \textbf{$n_\text{fft}$=128} \\
+\hline
+V2 ConvNeXt FiLM    & 0.0739 & 1.405 & 1.400 & 1.350 & 1.379 & 1.493 \\
+V2 ConvNeXt no-pitch & 0.0721 & 1.383 & 1.390 & 1.337 & 1.347 & 1.458 \\
+V2 AST FiLM          & 0.0755 & 1.292 & 1.279 & 1.218 & 1.267 & 1.403 \\
+V2 AST no-pitch      & 0.0783 & 1.273 & 1.275 & 1.227 & 1.230 & 1.361 \\
+\hline
+V3 ConvNeXt FiLM    & 0.0530 & 1.222 & 1.173 & 1.145 & 1.213 & 1.355 \\
+V3 ConvNeXt no-pitch & 0.0550 & 1.264 & 1.231 & 1.197 & 1.254 & 1.372 \\
+V3 AST FiLM          & \textbf{0.0525} & \textbf{1.096} & \textbf{1.043} & \textbf{1.019} & \textbf{1.091} & \textbf{1.230} \\
+V3 AST no-pitch      & 0.0560 & 1.119 & 1.079 & 1.047 & 1.101 & 1.248 \\
+\hline
+\end{tabular}
+\vspace{0.3cm}
+\caption{MAE and Multi-Scale Spectral loss on the shared 100-sample evaluation set. MSS is decomposed by FFT scale: coarse ($n_\text{fft}=8192$) reflects harmonic structure; fine ($n_\text{fft}=128$) reflects broadband energy. Lower is better for both metrics.}
+\label{tab:mss_summary}
+\end{table}
+
+\noindent
+Several observations emerge from Table~\ref{tab:mss_summary}. First, the MAE and MSS rankings are broadly consistent, validating that parameter-space accuracy does translate to audio-domain quality. Second, the AST-vs-ConvNeXt gap is larger in MSS than in MAE at V3 ($11.5\%$ vs $0.9\%$), suggesting that AST's global attention captures spectral relationships that matter for perceptual fidelity but average out in the scalar MAE across all 16 parameters. Third, the MSS improvement from V2 to V3 for the best model (AST FiLM: $1.292 \to 1.096$, a $15.2\%$ reduction) confirms that multi-pitch data and SpecAugment together produce audibly better reconstructions, not merely tighter parameter estimates. Fourth, the coarse FFT scale ($n_\text{fft}=8192$) consistently yields the lowest MSS values, indicating that harmonic structure is better reproduced than fine-grained temporal energy — consistent with the finding that wave-frame parameters (which govern harmonic content) still carry the highest residual errors.
+
+\noindent \newline
+One anomaly in Table~\ref{tab:mss_summary} is worth noting: for V2 ConvNeXt, the no-pitch model achieves a lower MAE on the shared set ($0.0721$) than the FiLM model ($0.0739$), reversing the direction seen in the five-fold cross-validation results (FiLM: $0.0665$ vs no-pitch: $0.0681$). This reversal is attributed to sampling variance: the shared evaluation set contains only 100 samples drawn from the V1/V2 test partition, whereas each fold of the five-fold cross-validation evaluates approximately 4{,}252 distinct test samples. The five-fold results, averaged across $\approx$21{,}260 unique parameter estimates, represent a far more statistically reliable estimate of the FiLM benefit than any single evaluation on 100 samples. This anomaly underscores the importance of large, independently drawn test sets for evaluating fine-grained differences between model variants — a concern addressed in the limitations below.
+
+% ═══════════════════════════════════════════════════════════
+\subsection{Limitations of This Study}
+
+\noindent
+Several limitations constrain the scope and generalisability of the conclusions drawn from this study.
+
+\paragraph{Restricted parameter space.}
+The 16-parameter subset studied here represents a deliberate simplification of the full Vital synthesizer, which exposes several hundred assignable parameters including complex modulation routing, multiple filter topologies, additional oscillator effects, and an extensive LFO matrix. While the chosen subset covers a musically coherent subtractive signal chain and is tractable for a systematic study, the results cannot be directly extrapolated to the full parameter space. Expanding beyond 16 parameters would increase output dimensionality and likely introduce new interdependencies that the grouped prediction head architecture may not handle without redesign.
+
+\paragraph{Synthetic data only.}
+Every audio clip in the dataset was programmatically generated under controlled conditions: no background noise, no room acoustics beyond the synthesizer's built-in reverb, no recording chain artefacts, and no performance variation. While this guarantees ground-truth label accuracy, it creates a domain gap with real-world use cases in which a user provides a recording made under less controlled conditions. The models have not been evaluated on any out-of-domain audio, and their performance on recordings from hardware synthesizers, live performances, or acoustic instruments is unknown.
+
+\paragraph{Single synthesizer.}
+All models are trained and tested exclusively on Vital. The learned representations encode Vital-specific spectral characteristics — its particular wavetable morphing behaviour, its filter model, its reverb tail. Whether these representations transfer to parameter estimation on other synthesizers (e.g., Serum, Diva, or Surge XT) is an open question. Each synthesizer produces subtly different audio for nominally similar parameter settings, and a model trained on Vital would likely require fine-tuning or retraining from scratch to match a different instrument.
+
+\paragraph{Non-differentiable synthesizer.}
+Because Vital cannot be incorporated into the training graph, the models are trained on a parameter-space loss only. The SmoothL1 loss treats all parameters as equally continuous and equally important (beyond the 2$\times$ oscillator weight), without regard for the highly non-linear and non-uniform mapping from parameter space to audio space. Parameters whose audio-space effect is small near a particular value — such as wavetable positions in perceptually flat regions — are penalised on the same scale as parameters whose effect is large, leading the model to prioritise perceptually irrelevant parameter accuracy at times. An audio-space training loss would directly penalise perceptible errors, but requires either a differentiable synthesizer or a differentiable proxy.
+
+\paragraph{Compute constraints and model scale.}
+Only ConvNeXt-tiny ($\approx$28M parameters) and AST-small ($\approx$22M parameters) were fully evaluated across all three iterations. The larger variants — ConvNeXt-base ($\approx$89M) and AST-base ($\approx$86M) — were not feasible within the available GPU budget. Given the data-scaling trend observed in V3, where AST's advantage over ConvNeXt grows with dataset size, it is plausible that AST-base would exhibit a further amplified advantage over ConvNeXt-base at 160{,}000 samples. This hypothesis remains untested.
+
+\paragraph{Single split for V3 and limited shared evaluation set.}
+The computational cost of training on 136{,}000 samples for 40 epochs precluded five-fold cross-validation for V3; the reported V3 results correspond to a single preset-level split. Unlike V2, where five-fold statistics provide a meaningful uncertainty estimate ($0.0665 \pm 0.0002$), the V3 results have no reported variance. Additionally, the shared MSS evaluation set contains 100 samples, which is sufficient to establish trends but insufficient for per-parameter statistical inference. The V2 ConvNeXt FiLM anomaly described above illustrates the consequences of this limitation directly.
+
+% ═══════════════════════════════════════════════════════════
+\subsection{Future Directions}
+
+\subsubsection{A Differentiable Proxy for Vital}
+
+\noindent
+The most direct and impactful extension of this work is training a neural approximation of Vital's audio rendering function — a differentiable proxy synthesizer — and incorporating it into an end-to-end audio-space training loop. The proxy would map a 16-dimensional (or extended) parameter vector to a mel spectrogram or waveform, approximating Vital's non-differentiable signal flow with a neural network. Once trained, the proxy can be composed with the parameter estimation model to create a fully differentiable pipeline: given an input spectrogram, the model predicts parameters, the proxy renders the predicted audio, and a perceptual loss between the original and re-rendered spectrograms is backpropagated through both networks. This would replace the current parameter-space SmoothL1 loss with an audio-domain objective that directly penalises perceptible synthesis errors. DiffMoog \cite{diffmoog} and DDX7 \cite{caspe2022ddx7} have demonstrated the feasibility of differentiable proxy synthesizers for Moog-style and FM instruments respectively; a similar approach applied to Vital's wavetable model is a natural next step.
+
+\subsubsection{Towards a Universal Differentiable Synthesizer}
+
+\noindent
+A more ambitious direction is to move beyond synthesizer-specific models and proxy networks toward a universal differentiable synthesis framework capable of representing multiple synthesis paradigms under a common differentiable abstraction. Rather than training one proxy per commercial synthesizer, the framework would define a parametric synthesis graph — combining wavetable oscillators, FM operators, subtractive filters, and effects modules through differentiable signal processing primitives in the spirit of DDSP \cite{engel2020ddsp} — and learn the parameters of this graph from audio. Such a framework would enable cross-synthesizer training: a model trained on audio from multiple synthesizers simultaneously could learn shared spectral priors that transfer to unseen instruments, enabling zero-shot or few-shot parameter estimation for any synthesizer whose architecture can be approximately expressed within the framework. It would also enable a new application: cross-synthesizer preset translation, where the system estimates the parameters of synthesizer A that best reproduce audio generated by synthesizer B. This direction requires substantial advances in differentiable synthesis architecture design and training stability, but the results of this study — particularly the strong baseline set by supervised regression on a single synthesizer — provide a principled starting point for data generation, evaluation protocol, and architecture selection in that larger project.

@@ -1,0 +1,43 @@
+Test Results for Model: baseline-small (Exp: sin_embed_44k)
+==========================================
+Device: cuda
+Reading checkpoints from: C:\Users\internal.research\Desktop\MarouaneBenHajHassineCapstone\SynthInv\pfe\checkpoints\baseline-small_sin_embed_44k
+
+Testing Split 0...
+ -> MAE: 0.0824
+
+Testing Split 1...
+ -> MAE: 0.0818
+
+Testing Split 2...
+ -> MAE: 0.0829
+
+Testing Split 3...
+ -> MAE: 0.0838
+
+Testing Split 4...
+ -> MAE: 0.0837
+
+========================================
+   RESULTS: baseline-small_sin_embed_44k
+========================================
+Average Test MAE: 0.0829 ± 0.0008
+Best Split: 1 (0.0818)
+
+Detailed Breakdown (Best Split):
+ oscillator_1_wave_frame       : 0.1487
+ oscillator_1_level            : 0.1276
+ oscillator_1_unison_voices    : 0.1286
+ oscillator_1_unison_detune    : 0.0937
+ oscillator_2_wave_frame       : 0.1750
+ oscillator_2_level            : 0.1404
+ oscillator_2_transpose        : 0.0903
+ sample_level                  : 0.0885
+ envelope_1_attack             : 0.0212
+ envelope_1_decay              : 0.0153
+ filter_1_cutoff               : 0.0456
+ filter_1_resonance            : 0.0717
+ modulation_1_amount           : 0.0413
+ envelope_2_attack             : 0.0379
+ envelope_2_decay              : 0.0283
+ reverb_mix                    : 0.0547

@@ -1,0 +1,67 @@
+Test Results for Model: convnext-tiny
+==========================================
+Device: cuda
+Reading checkpoints from: C:\Users\internal.research\Desktop\MarouaneBenHajHassineCapstone\SynthInv\pfe\checkpoints\convnext-tiny
+Writing results to: C:\Users\internal.research\Desktop\MarouaneBenHajHassineCapstone\SynthInv\pfe\checkpoints\convnext-tiny\test_results.txt
+
+========================================
+   TESTING SPLIT 0
+========================================
+Loading checkpoint: best_convnext-tiny_split_0.pt
+ -> Split 0 Test MAE: 0.0768
+
+========================================
+   TESTING SPLIT 1
+========================================
+Loading checkpoint: best_convnext-tiny_split_1.pt
+ -> Split 1 Test MAE: 0.0752
+
+========================================
+   TESTING SPLIT 2
+========================================
+Loading checkpoint: best_convnext-tiny_split_2.pt
+ -> Split 2 Test MAE: 0.0771
+
+========================================
+   TESTING SPLIT 3
+========================================
+Loading checkpoint: best_convnext-tiny_split_3.pt
+ -> Split 3 Test MAE: 0.0769
+
+========================================
+   TESTING SPLIT 4
+========================================
+Loading checkpoint: best_convnext-tiny_split_4.pt
+ -> Split 4 Test MAE: 0.0764
+
+========================================
+   SCIENTIFIC AGGREGATE (Robustness)
+========================================
+Overall Test Performance (5 splits):
+Average MAE: 0.0765 ± 0.0007
+
+========================================
+   WINNER: SPLIT 1
+   (This is the model you should use for the final app)
+========================================
+Best Split Test MAE: 0.0752
+
+Per-Parameter Performance (Best Split):
+  oscillator_1_wave_frame       : 0.1329
+  oscillator_1_level            : 0.1165
+  oscillator_1_unison_voices    : 0.1083
+  oscillator_1_unison_detune    : 0.0864
+  oscillator_2_wave_frame       : 0.1597
+  oscillator_2_level            : 0.1305
+  oscillator_2_transpose        : 0.0951
+  sample_level                  : 0.0784
+  envelope_1_attack             : 0.0233
+  envelope_1_decay              : 0.0196
+  filter_1_cutoff               : 0.0413
+  filter_1_resonance            : 0.0670
+  modulation_1_amount           : 0.0352
+  envelope_2_attack             : 0.0354
+  envelope_2_decay              : 0.0276
+  reverb_mix                    : 0.0467
+========================================
+Results saved to: C:\Users\internal.research\Desktop\MarouaneBenHajHassineCapstone\SynthInv\pfe\checkpoints\convnext-tiny\test_results.txt

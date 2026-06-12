@@ -1,0 +1,93 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Introduction                  %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{INTRODUCTION}
+\label{sec:introduction}
+
+This section provides an overview of the conducted research, starting with the project context, followed by the purpose of the study, research objectives, research questions, and the approach and boundaries that define the scope of this work.
+
+\subsection{Project Context}
+
+Sound synthesis is a fundamental component of modern music production and cinematic sound design, enabling the creation of complex, rich sonic textures as well as faithful emulations of acoustic instruments and sounds found in nature. While synthesis can be achieved through purely acoustic means, synthesizers have become one of the primary tools for this purpose. At their core, synthesizers expose a structured interface of parameters, including oscillators, filters, envelopes, modulation routings, and effects, whose combined interaction shapes the output sound. The relationship between these parameters and the resulting audio is highly nonlinear and unintuitive, making manual sound reproduction a time-consuming process \cite{roads1996computer, cook2002realsound}.
+
+\par \vspace{0.5cm}
+
+\noindent Historically, the most culturally influential synthesizers, namely the Minimoog by Moog and the Prophet-5 by Sequential Circuits, featured a fixed signal flow with a comparatively small number of parameters. Despite this simplicity, these instruments remain widely used in modern music production and are capable of expressing a surprisingly wide range of sounds. This stands in contrast to modern software synthesizers such as Vital by Matt Tytel \cite{tytel2020vital}, Serum by Xfer Records, or Diva by u-he, which expose hundreds of parameters, many of which remain unexplored in practice. Notably, even when working with these feature-rich instruments, producers tend to gravitate toward a familiar and interpretable subset: oscillator waveforms, envelope shapes, filter cutoff, and a few modulation amounts. This observation led us to restrict the parameter space in this study to a curated subset inspired by those vintage signal chains, keeping the task both musically meaningful and tractable.
+
+\par \vspace{0.5cm}
+
+\noindent In this project, we focus on Vital, a modern open-source wavetable synthesizer developed by Matt Tytel and widely adopted in the music production community, making it an ideal subject for this research. Our motivation is straightforward: a producer who hears a sound they want to recreate, whether from a reference track or their own imagination, typically faces a time-consuming process of manual programming. An automated estimation system would serve as a shortcut for beginners and a time-saving tool for experienced sound designers alike. More broadly, it can act as a creative aid: feeding an arbitrary audio signal into the estimator yields a synthesizer approximation that can open timbral directions difficult to discover through manual exploration.
+
+\par \vspace{0.5cm}
+
+\noindent The task of recovering synthesizer parameters from audio, known as inverse synthesis, has been studied since the early days of computational audio. Initial approaches relied on Genetic Algorithms (GA) \cite{walker2007audiosynthesis}, which are computationally expensive and scale poorly to high-dimensional parameter spaces. Deep learning later shifted the paradigm toward direct regression \cite{yeeking2018automatic, barkan2019inversynth}, removing the need for iterative synthesis at inference time. More recently, architectures from computer vision have been adapted for audio: Convolutional Neural Networks (CNNs) on mel-spectrograms have become a standard baseline \cite{hershey2017cnn}, and the Audio Spectrogram Transformer (AST) has shown strong results using global self-attention \cite{gong2021ast}. The work most directly related to this project is that of Bruford et al. \cite{bruford2024ast}, who applied AST to synthesizer sound matching and established a strong transformer baseline for the task.
+
+\subsection{Purpose of the Study}
+
+The purpose of this work is to evaluate the effectiveness of existing deep learning architectures in synthesizer parameter estimation from audio, benchmarking them on a similar dataset and experimental setup. To this end, we implement and develop a framework that enables systematic comparison across architectures and training configurations, applied to the Vital synthesizer. A custom dataset is generated programmatically using the Pedalboard library to drive Vital under controlled conditions, with each sample paired with its ground-truth parameter vector. The dataset is built in two stages: an initial collection and a subsequently augmented version three times larger, obtained by rendering each preset at multiple MIDI pitches. The study compares three neural architectures — a baseline CNN with residual blocks \cite{he2016resnet}, a ConvNeXt backbone \cite{liu2022convnext}, and an Audio Spectrogram Transformer \cite{gong2021ast} — across three experimental iterations of increasing complexity, examining the contributions of multi-scale mel input, FiLM-based pitch conditioning \cite{perez2018film}, and multi-pitch data augmentation to overall estimation accuracy.
+
+\subsection{Research Objectives}
+
+The following objectives define the scope of this work:
+
+\begin{itemize}
+
+\item[$\blacksquare$] \textbf{Objective 1:} Evaluate and compare the effectiveness of three deep learning architectures — a residual CNN baseline, ConvNeXt, and the Audio Spectrogram Transformer — in regressing synthesizer parameters from mel-spectrogram inputs, identifying which architectural family is best suited to this task.
+
+\item[$\blacksquare$] \textbf{Objective 2:} Assess whether a multi-scale mel-spectrogram input representation — combining fine, mid, and coarse time-frequency resolutions — provides a measurable improvement over a conventional single-scale mel-spectrogram for synthesizer parameter estimation.
+
+\item[$\blacksquare$] \textbf{Objective 3:} Investigate the conditions under which explicit pitch conditioning via a FiLM-based auxiliary branch improves parameter estimation accuracy, and establish the relationship between multi-pitch training data and the effectiveness of pitch conditioning.
+
+\end{itemize}
+
+\subsection{Research Questions}
+
+\begin{itemize}
+
+    \item[$\blacksquare$] \textbf{Research Question 1:} How do convolutional architectures (residual CNN and ConvNeXt) compare to the Audio Spectrogram Transformer in regressing synthesizer parameters from mel-spectrograms? \\
+    \textbf{Rationale:} CNNs exploit local spectral patterns through hierarchical convolution, while transformers capture global dependencies through self-attention. Synthesized audio tends to exhibit strongly localized timbral features — harmonic stacks, filter shapes, envelope transients — that may favor local feature extraction over global context. A controlled comparison is necessary to determine which architectural bias better fits the structure of this regression task.
+
+    \item[$\blacksquare$] \textbf{Research Question 2:} Does replacing a single mel-spectrogram with a three-scale representation combining fine, mid, and coarse spectrograms improve synthesizer parameter estimation accuracy? \\
+    \textbf{Rationale:} A single mel-spectrogram is a compromise between temporal and spectral resolution. Different synthesis parameters manifest at different scales: transient envelope parameters are better captured at fine temporal resolution, while harmonic and timbral parameters benefit from coarser, frequency-resolved representations. This question evaluates whether providing all three resolutions simultaneously as a multi-channel input leads to a consistent improvement.
+
+    \item[$\blacksquare$] \textbf{Research Question 3:} Under what conditions does explicit pitch conditioning via FiLM modulation improve synthesizer parameter estimation, and why does its effectiveness depend on the training data? \\
+    \textbf{Rationale:} The spectral content of a synthesized sound is jointly determined by its synthesis parameters and the MIDI pitch at which it is played. When each preset is rendered at only a single pitch, the model has no incentive to use the pitch input, as there is no cross-pitch variation to condition on. This question examines whether rendering each preset at multiple pitches — creating paired examples of the same parameters at different spectral positions — is a necessary condition for pitch conditioning to provide a measurable benefit.
+
+\end{itemize}
+
+\subsection{Approach and Boundaries of the Study}
+
+This research adopts the Design Science Research (DSR) methodology as its guiding framework. DSR is a problem-solving paradigm that focuses on the creation and evaluation of purposeful artifacts — in this case, the deep learning models and associated data generation pipeline — designed to address a specific practical problem \cite{wieringa2014design}. Its iterative structure, which cycles through problem investigation, solution design, implementation, and evaluation, is well-suited to the incremental nature of this project, where each experimental iteration (V1, V2, V3) refines the artifact based on findings from the previous one.
+
+\subsubsection{Scope}
+This study compares three neural architectures — a residual CNN, ConvNeXt, and AST — for the task of synthesizer parameter regression applied to the Vital synthesizer. The scope includes evaluating single-scale and multi-scale mel-spectrogram inputs, FiLM-based pitch conditioning, grouped prediction heads, and multi-pitch data augmentation. Performance is assessed using Mean Absolute Error (MAE) in the normalized parameter space across 5-fold cross-validation splits, with per-parameter analysis. For V2 and V3, a Multi-Scale Spectral (MSS) loss computed on re-rendered audio is additionally reported as a perceptual evaluation metric.
+
+\subsubsection{Limitations}
+Several constraints bounded the scope and depth of this investigation. First, hardware availability was restricted to a single NVIDIA RTX 4090 shared among multiple researchers, introducing scheduling conflicts that limited the number of training runs and reduced the extent of hyperparameter exploration. Second, the dataset generation pipeline required real-time audio rendering through Vital, producing approximately 140 GB of raw WAV data; the time cost of rendering and validating clips imposed a practical ceiling on dataset scale. Third, the inverse synthesis literature is a niche domain with a comparatively small body of directly relevant work, making it challenging to identify and contextualize prior contributions. Finally, this project is inherently interdisciplinary, combining audio signal processing, music theory, and deep learning; bridging these domains required significant upfront investment in domain knowledge acquisition for a team with a primary background in software engineering.
+
+\subsubsection{Delimitations}
+The study is intentionally restricted to the Vital software synthesizer and a fixed set of 16 parameters. Generative architectures, recurrent networks, and reinforcement learning approaches are excluded in favor of direct regression models. The envelope sustain and release stages are omitted, as the fixed 4-second render duration without a note-off event makes these parameters unobservable from the audio. Although the Multi-Scale Spectral (MSS) loss has been used as a training objective in differentiable synthesis frameworks \cite{engel2020ddsp, caspe2022ddx7}, it is not used as a training loss in this study. Computing MSS requires re-rendering audio through the synthesizer at each training step, which is infeasible with Vital as a non-differentiable black-box VST; doing so would require building a differentiable proxy synthesizer, adding substantial complexity beyond the scope of this work. MSS is therefore used exclusively as a post-hoc perceptual evaluation metric for V2 and V3. The study does not extend to analog hardware synthesizers, other VST plugins, or parameter spaces beyond those defined.
+
+\subsubsection{Assumptions}
+It is assumed that the synthetic dataset, generated under timbre-constrained parameter ranges across five sound categories, provides sufficient coverage of musically relevant sounds for the models to learn generalizable synthesis mappings. It is further assumed that the mel-spectrogram representation retains enough spectral and temporal information to characterize the 16 target parameters, despite the inherent loss of phase information. Finally, a reduction in normalized MAE is assumed to correlate with a tangible improvement in the perceptual similarity between the target and estimated sounds.
+
+\subsection{Contributions}
+
+This work makes the following contributions to the field of inverse synthesis and audio deep learning:
+
+\begin{itemize}
+
+\item[$\blacksquare$] \textbf{First direct comparison of ConvNeXt and AST for synthesizer parameter estimation.} Prior work has applied AST to sound matching \cite{bruford2024ast} or convolutional models to parameter regression \cite{barkan2019inversynth}, but no study has directly compared these two architectural families in the same controlled experimental setting.
+
+\item[$\blacksquare$] \textbf{First use of explicit pitch conditioning for synthesizer parameter regression.} A MIDI pitch input is incorporated as an auxiliary conditioning signal via FiLM modulation, enabling the model to disentangle fundamental frequency from timbral characteristics — a conditioning strategy not previously explored in this task.
+
+\item[$\blacksquare$] \textbf{Multi-scale mel spectrogram as a three-channel input representation.} To the best of our knowledge, stacking fine, mid, and coarse mel spectrograms into a single multi-channel input tensor has not previously been applied to synthesizer parameter estimation, and its benefit over single-scale input is evaluated through a dedicated ablation.
+
+\item[$\blacksquare$] \textbf{Timbre-constrained dataset generation methodology.} A structured dataset generation pipeline is proposed that constrains parameter sampling to musically coherent timbral families, ensuring coverage of practically relevant sounds while avoiding silent or pathological outputs.
+
+\end{itemize}
+
+\subsection{Structure}
+
+The remainder of this report is organized as follows. Section 2 establishes the theoretical background and reviews prior work in sound synthesis, inverse synthesis methods, and the deep learning architectures used in this study. Section 3 describes the research methodology, detailing the DSR framework applied, the data generation pipeline, and the experimental setup. Section 4 presents the three experimental iterations — V1, V2, and V3 — describing the design decisions, architectural choices, and incremental improvements introduced at each stage. Section 5 reports the quantitative results and findings across all experiments. Section 6 discusses the results in light of the research questions, addresses limitations, and interprets per-parameter performance patterns. Section 7 concludes the report by summarizing contributions and outlining directions for future work.

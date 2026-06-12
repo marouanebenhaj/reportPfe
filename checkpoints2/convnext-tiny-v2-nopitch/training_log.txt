@@ -1,0 +1,346 @@
+Training convnext-tiny-v2-nopitch
+========================================
+multiscale=True  weighted_loss=True
+Device: cuda | Checkpoints: C:\Users\internal.research\Desktop\MarouaneBenHajHassineCapstone\SynthInv\synthInvV2\checkpoints\convnext-tiny-v2-nopitch
+
+--- Split 0 ---
+Total params: 29,355,760  Trainable: 29,355,760
+torch.compile: False
+Split 0 Ep 01/40: Train=0.2208  Eval=0.1319  VRAM=0.8GB
+  -> Saved best: 0.1319
+Split 0 Ep 02/40: Train=0.1874  Eval=0.1208  VRAM=17.6GB
+  -> Saved best: 0.1208
+Split 0 Ep 03/40: Train=0.1735  Eval=0.1147  VRAM=17.6GB
+  -> Saved best: 0.1147
+Split 0 Ep 04/40: Train=0.1633  Eval=0.1138  VRAM=17.6GB
+  -> Saved best: 0.1138
+Split 0 Ep 05/40: Train=0.1534  Eval=0.1040  VRAM=17.6GB
+  -> Saved best: 0.1040
+Split 0 Ep 06/40: Train=0.1455  Eval=0.1113  VRAM=17.6GB
+Split 0 Ep 07/40: Train=0.1384  Eval=0.0992  VRAM=17.6GB
+  -> Saved best: 0.0992
+Split 0 Ep 08/40: Train=0.1319  Eval=0.1022  VRAM=17.6GB
+Split 0 Ep 09/40: Train=0.1277  Eval=0.1006  VRAM=17.6GB
+Split 0 Ep 10/40: Train=0.1221  Eval=0.0954  VRAM=17.6GB
+  -> Saved best: 0.0954
+Split 0 Ep 11/40: Train=0.1169  Eval=0.0925  VRAM=17.6GB
+  -> Saved best: 0.0925
+Split 0 Ep 12/40: Train=0.1107  Eval=0.0928  VRAM=17.6GB
+Split 0 Ep 13/40: Train=0.1050  Eval=0.0890  VRAM=17.6GB
+  -> Saved best: 0.0890
+Split 0 Ep 14/40: Train=0.0999  Eval=0.0890  VRAM=17.6GB
+Split 0 Ep 15/40: Train=0.0954  Eval=0.0910  VRAM=17.6GB
+Split 0 Ep 16/40: Train=0.0900  Eval=0.0892  VRAM=17.6GB
+Split 0 Ep 17/40: Train=0.0859  Eval=0.0813  VRAM=17.6GB
+  -> Saved best: 0.0813
+Split 0 Ep 18/40: Train=0.0791  Eval=0.0807  VRAM=17.6GB
+  -> Saved best: 0.0807
+Split 0 Ep 19/40: Train=0.0735  Eval=0.0776  VRAM=17.6GB
+  -> Saved best: 0.0776
+Split 0 Ep 20/40: Train=0.0680  Eval=0.0807  VRAM=17.6GB
+Split 0 Ep 21/40: Train=0.0637  Eval=0.0763  VRAM=17.6GB
+  -> Saved best: 0.0763
+Split 0 Ep 22/40: Train=0.0587  Eval=0.0770  VRAM=17.6GB
+Split 0 Ep 23/40: Train=0.0527  Eval=0.0754  VRAM=17.6GB
+  -> Saved best: 0.0754
+Split 0 Ep 24/40: Train=0.0480  Eval=0.0735  VRAM=17.6GB
+  -> Saved best: 0.0735
+Split 0 Ep 25/40: Train=0.0430  Eval=0.0727  VRAM=17.6GB
+  -> Saved best: 0.0727
+Split 0 Ep 26/40: Train=0.0389  Eval=0.0710  VRAM=17.6GB
+  -> Saved best: 0.0710
+Split 0 Ep 27/40: Train=0.0344  Eval=0.0714  VRAM=17.6GB
+Split 0 Ep 28/40: Train=0.0309  Eval=0.0706  VRAM=17.6GB
+  -> Saved best: 0.0706
+Split 0 Ep 29/40: Train=0.0276  Eval=0.0700  VRAM=17.6GB
+  -> Saved best: 0.0700
+Split 0 Ep 30/40: Train=0.0242  Eval=0.0700  VRAM=17.6GB
+  -> Saved best: 0.0700
+Split 0 Ep 31/40: Train=0.0214  Eval=0.0699  VRAM=17.6GB
+  -> Saved best: 0.0699
+Split 0 Ep 32/40: Train=0.0190  Eval=0.0694  VRAM=17.6GB
+  -> Saved best: 0.0694
+Split 0 Ep 33/40: Train=0.0167  Eval=0.0693  VRAM=17.6GB
+  -> Saved best: 0.0693
+Split 0 Ep 34/40: Train=0.0148  Eval=0.0692  VRAM=17.6GB
+  -> Saved best: 0.0692
+Split 0 Ep 35/40: Train=0.0134  Eval=0.0692  VRAM=17.6GB
+  -> Saved best: 0.0692
+Split 0 Ep 36/40: Train=0.0122  Eval=0.0690  VRAM=17.6GB
+  -> Saved best: 0.0690
+Split 0 Ep 37/40: Train=0.0113  Eval=0.0691  VRAM=17.6GB
+Split 0 Ep 38/40: Train=0.0107  Eval=0.0690  VRAM=17.6GB
+Split 0 Ep 39/40: Train=0.0104  Eval=0.0690  VRAM=17.6GB
+Split 0 Ep 40/40: Train=0.0102  Eval=0.0690  VRAM=17.6GB
+
+--- Split 1 ---
+Split 1 Ep 01/40: Train=0.2174  Eval=0.1289  VRAM=17.6GB
+  -> Saved best: 0.1289
+Split 1 Ep 02/40: Train=0.1840  Eval=0.1172  VRAM=17.6GB
+  -> Saved best: 0.1172
+Split 1 Ep 03/40: Train=0.1708  Eval=0.1152  VRAM=17.6GB
+  -> Saved best: 0.1152
+Split 1 Ep 04/40: Train=0.1595  Eval=0.1046  VRAM=17.6GB
+  -> Saved best: 0.1046
+Split 1 Ep 05/40: Train=0.1505  Eval=0.1035  VRAM=17.6GB
+  -> Saved best: 0.1035
+Split 1 Ep 06/40: Train=0.1424  Eval=0.1033  VRAM=17.6GB
+  -> Saved best: 0.1033
+Split 1 Ep 07/40: Train=0.1364  Eval=0.1114  VRAM=17.6GB
+Split 1 Ep 08/40: Train=0.1327  Eval=0.1017  VRAM=17.6GB
+  -> Saved best: 0.1017
+Split 1 Ep 09/40: Train=0.1253  Eval=0.0923  VRAM=17.6GB
+  -> Saved best: 0.0923
+Split 1 Ep 10/40: Train=0.1206  Eval=0.0905  VRAM=17.6GB
+  -> Saved best: 0.0905
+Split 1 Ep 11/40: Train=0.1150  Eval=0.0971  VRAM=17.6GB
+Split 1 Ep 12/40: Train=0.1092  Eval=0.0953  VRAM=17.6GB
+Split 1 Ep 13/40: Train=0.1053  Eval=0.0904  VRAM=17.6GB
+  -> Saved best: 0.0904
+Split 1 Ep 14/40: Train=0.0983  Eval=0.0882  VRAM=17.6GB
+  -> Saved best: 0.0882
+Split 1 Ep 15/40: Train=0.0948  Eval=0.0840  VRAM=17.6GB
+  -> Saved best: 0.0840
+Split 1 Ep 16/40: Train=0.0881  Eval=0.0827  VRAM=17.6GB
+  -> Saved best: 0.0827
+Split 1 Ep 17/40: Train=0.0825  Eval=0.0790  VRAM=17.6GB
+  -> Saved best: 0.0790
+Split 1 Ep 18/40: Train=0.0770  Eval=0.0803  VRAM=17.6GB
+Split 1 Ep 19/40: Train=0.0719  Eval=0.0775  VRAM=17.6GB
+  -> Saved best: 0.0775
+Split 1 Ep 20/40: Train=0.0678  Eval=0.0794  VRAM=17.6GB
+Split 1 Ep 21/40: Train=0.0641  Eval=0.0765  VRAM=17.6GB
+  -> Saved best: 0.0765
+Split 1 Ep 22/40: Train=0.0574  Eval=0.0750  VRAM=17.6GB
+  -> Saved best: 0.0750
+Split 1 Ep 23/40: Train=0.0523  Eval=0.0728  VRAM=17.6GB
+  -> Saved best: 0.0728
+Split 1 Ep 24/40: Train=0.0477  Eval=0.0723  VRAM=17.6GB
+  -> Saved best: 0.0723
+Split 1 Ep 25/40: Train=0.0424  Eval=0.0710  VRAM=17.6GB
+  -> Saved best: 0.0710
+Split 1 Ep 26/40: Train=0.0382  Eval=0.0704  VRAM=17.6GB
+  -> Saved best: 0.0704
+Split 1 Ep 27/40: Train=0.0344  Eval=0.0694  VRAM=17.6GB
+  -> Saved best: 0.0694
+Split 1 Ep 28/40: Train=0.0304  Eval=0.0694  VRAM=17.6GB
+Split 1 Ep 29/40: Train=0.0268  Eval=0.0687  VRAM=17.6GB
+  -> Saved best: 0.0687
+Split 1 Ep 30/40: Train=0.0241  Eval=0.0687  VRAM=17.6GB
+  -> Saved best: 0.0687
+Split 1 Ep 31/40: Train=0.0209  Eval=0.0683  VRAM=17.6GB
+  -> Saved best: 0.0683
+Split 1 Ep 32/40: Train=0.0184  Eval=0.0682  VRAM=17.6GB
+  -> Saved best: 0.0682
+Split 1 Ep 33/40: Train=0.0163  Eval=0.0676  VRAM=17.6GB
+  -> Saved best: 0.0676
+Split 1 Ep 34/40: Train=0.0145  Eval=0.0678  VRAM=17.6GB
+Split 1 Ep 35/40: Train=0.0129  Eval=0.0677  VRAM=17.6GB
+Split 1 Ep 36/40: Train=0.0118  Eval=0.0677  VRAM=17.6GB
+Split 1 Ep 37/40: Train=0.0109  Eval=0.0677  VRAM=17.6GB
+Split 1 Ep 38/40: Train=0.0104  Eval=0.0676  VRAM=17.6GB
+Split 1 Ep 39/40: Train=0.0100  Eval=0.0676  VRAM=17.6GB
+Split 1 Ep 40/40: Train=0.0099  Eval=0.0676  VRAM=17.6GB
+
+--- Split 2 ---
+Split 2 Ep 01/40: Train=0.2280  Eval=0.1303  VRAM=17.6GB
+  -> Saved best: 0.1303
+Split 2 Ep 02/40: Train=0.1847  Eval=0.1188  VRAM=17.6GB
+  -> Saved best: 0.1188
+Split 2 Ep 03/40: Train=0.1708  Eval=0.1117  VRAM=17.6GB
+  -> Saved best: 0.1117
+Split 2 Ep 04/40: Train=0.1580  Eval=0.1075  VRAM=17.6GB
+  -> Saved best: 0.1075
+Split 2 Ep 05/40: Train=0.1491  Eval=0.1037  VRAM=17.6GB
+  -> Saved best: 0.1037
+Split 2 Ep 06/40: Train=0.1421  Eval=0.1052  VRAM=17.6GB
+Split 2 Ep 07/40: Train=0.1353  Eval=0.0984  VRAM=17.6GB
+  -> Saved best: 0.0984
+Split 2 Ep 08/40: Train=0.1302  Eval=0.1072  VRAM=17.6GB
+Split 2 Ep 09/40: Train=0.1269  Eval=0.0969  VRAM=17.6GB
+  -> Saved best: 0.0969
+Split 2 Ep 10/40: Train=0.1202  Eval=0.0974  VRAM=17.6GB
+Split 2 Ep 11/40: Train=0.1152  Eval=0.0955  VRAM=17.6GB
+  -> Saved best: 0.0955
+Split 2 Ep 12/40: Train=0.1099  Eval=0.0951  VRAM=17.6GB
+  -> Saved best: 0.0951
+Split 2 Ep 13/40: Train=0.1041  Eval=0.0920  VRAM=17.6GB
+  -> Saved best: 0.0920
+Split 2 Ep 14/40: Train=0.0986  Eval=0.0883  VRAM=17.6GB
+  -> Saved best: 0.0883
+Split 2 Ep 15/40: Train=0.0927  Eval=0.0931  VRAM=17.6GB
+Split 2 Ep 16/40: Train=0.0895  Eval=0.0867  VRAM=17.6GB
+  -> Saved best: 0.0867
+Split 2 Ep 17/40: Train=0.0843  Eval=0.0806  VRAM=17.6GB
+  -> Saved best: 0.0806
+Split 2 Ep 18/40: Train=0.0785  Eval=0.0835  VRAM=17.6GB
+Split 2 Ep 19/40: Train=0.0730  Eval=0.0780  VRAM=17.6GB
+  -> Saved best: 0.0780
+Split 2 Ep 20/40: Train=0.0668  Eval=0.0781  VRAM=17.6GB
+Split 2 Ep 21/40: Train=0.0616  Eval=0.0770  VRAM=17.6GB
+  -> Saved best: 0.0770
+Split 2 Ep 22/40: Train=0.0573  Eval=0.0746  VRAM=17.6GB
+  -> Saved best: 0.0746
+Split 2 Ep 23/40: Train=0.0521  Eval=0.0750  VRAM=17.6GB
+Split 2 Ep 24/40: Train=0.0484  Eval=0.0719  VRAM=17.6GB
+  -> Saved best: 0.0719
+Split 2 Ep 25/40: Train=0.0430  Eval=0.0717  VRAM=17.6GB
+  -> Saved best: 0.0717
+Split 2 Ep 26/40: Train=0.0388  Eval=0.0708  VRAM=17.6GB
+  -> Saved best: 0.0708
+Split 2 Ep 27/40: Train=0.0350  Eval=0.0699  VRAM=17.6GB
+  -> Saved best: 0.0699
+Split 2 Ep 28/40: Train=0.0312  Eval=0.0690  VRAM=17.6GB
+  -> Saved best: 0.0690
+Split 2 Ep 29/40: Train=0.0276  Eval=0.0693  VRAM=17.6GB
+Split 2 Ep 30/40: Train=0.0244  Eval=0.0690  VRAM=17.6GB
+Split 2 Ep 31/40: Train=0.0215  Eval=0.0685  VRAM=17.6GB
+  -> Saved best: 0.0685
+Split 2 Ep 32/40: Train=0.0190  Eval=0.0679  VRAM=17.6GB
+  -> Saved best: 0.0679
+Split 2 Ep 33/40: Train=0.0169  Eval=0.0679  VRAM=17.6GB
+Split 2 Ep 34/40: Train=0.0151  Eval=0.0679  VRAM=17.6GB
+  -> Saved best: 0.0679
+Split 2 Ep 35/40: Train=0.0135  Eval=0.0679  VRAM=17.6GB
+Split 2 Ep 36/40: Train=0.0122  Eval=0.0679  VRAM=17.6GB
+Split 2 Ep 37/40: Train=0.0114  Eval=0.0680  VRAM=17.6GB
+Split 2 Ep 38/40: Train=0.0108  Eval=0.0678  VRAM=17.6GB
+  -> Saved best: 0.0678
+Split 2 Ep 39/40: Train=0.0104  Eval=0.0678  VRAM=17.6GB
+Split 2 Ep 40/40: Train=0.0104  Eval=0.0678  VRAM=17.6GB
+  -> Saved best: 0.0678
+
+--- Split 3 ---
+Split 3 Ep 01/40: Train=0.2236  Eval=0.1293  VRAM=17.6GB
+  -> Saved best: 0.1293
+Split 3 Ep 02/40: Train=0.1831  Eval=0.1174  VRAM=17.6GB
+  -> Saved best: 0.1174
+Split 3 Ep 03/40: Train=0.1695  Eval=0.1102  VRAM=17.6GB
+  -> Saved best: 0.1102
+Split 3 Ep 04/40: Train=0.1574  Eval=0.1057  VRAM=17.6GB
+  -> Saved best: 0.1057
+Split 3 Ep 05/40: Train=0.1484  Eval=0.1020  VRAM=17.6GB
+  -> Saved best: 0.1020
+Split 3 Ep 06/40: Train=0.1407  Eval=0.1087  VRAM=17.6GB
+Split 3 Ep 07/40: Train=0.1361  Eval=0.1014  VRAM=17.6GB
+  -> Saved best: 0.1014
+Split 3 Ep 08/40: Train=0.1299  Eval=0.0944  VRAM=17.6GB
+  -> Saved best: 0.0944
+Split 3 Ep 09/40: Train=0.1238  Eval=0.1056  VRAM=17.6GB
+Split 3 Ep 10/40: Train=0.1225  Eval=0.0980  VRAM=17.6GB
+Split 3 Ep 11/40: Train=0.1165  Eval=0.0966  VRAM=17.6GB
+Split 3 Ep 12/40: Train=0.1105  Eval=0.0910  VRAM=17.6GB
+  -> Saved best: 0.0910
+Split 3 Ep 13/40: Train=0.1055  Eval=0.0888  VRAM=17.6GB
+  -> Saved best: 0.0888
+Split 3 Ep 14/40: Train=0.0990  Eval=0.0943  VRAM=17.6GB
+Split 3 Ep 15/40: Train=0.0941  Eval=0.0865  VRAM=17.6GB
+  -> Saved best: 0.0865
+Split 3 Ep 16/40: Train=0.0886  Eval=0.0811  VRAM=17.6GB
+  -> Saved best: 0.0811
+Split 3 Ep 17/40: Train=0.0826  Eval=0.0816  VRAM=17.6GB
+Split 3 Ep 18/40: Train=0.0778  Eval=0.0794  VRAM=17.6GB
+  -> Saved best: 0.0794
+Split 3 Ep 19/40: Train=0.0734  Eval=0.0781  VRAM=17.6GB
+  -> Saved best: 0.0781
+Split 3 Ep 20/40: Train=0.0680  Eval=0.0757  VRAM=17.6GB
+  -> Saved best: 0.0757
+Split 3 Ep 21/40: Train=0.0642  Eval=0.0790  VRAM=17.6GB
+Split 3 Ep 22/40: Train=0.0597  Eval=0.0740  VRAM=17.6GB
+  -> Saved best: 0.0740
+Split 3 Ep 23/40: Train=0.0536  Eval=0.0740  VRAM=17.6GB
+Split 3 Ep 24/40: Train=0.0490  Eval=0.0717  VRAM=17.6GB
+  -> Saved best: 0.0717
+Split 3 Ep 25/40: Train=0.0444  Eval=0.0730  VRAM=17.6GB
+Split 3 Ep 26/40: Train=0.0394  Eval=0.0701  VRAM=17.6GB
+  -> Saved best: 0.0701
+Split 3 Ep 27/40: Train=0.0352  Eval=0.0696  VRAM=17.6GB
+  -> Saved best: 0.0696
+Split 3 Ep 28/40: Train=0.0316  Eval=0.0690  VRAM=17.6GB
+  -> Saved best: 0.0690
+Split 3 Ep 29/40: Train=0.0277  Eval=0.0691  VRAM=17.6GB
+Split 3 Ep 30/40: Train=0.0244  Eval=0.0682  VRAM=17.6GB
+  -> Saved best: 0.0682
+Split 3 Ep 31/40: Train=0.0215  Eval=0.0679  VRAM=17.6GB
+  -> Saved best: 0.0679
+Split 3 Ep 32/40: Train=0.0191  Eval=0.0677  VRAM=17.6GB
+  -> Saved best: 0.0677
+Split 3 Ep 33/40: Train=0.0168  Eval=0.0675  VRAM=17.6GB
+  -> Saved best: 0.0675
+Split 3 Ep 34/40: Train=0.0149  Eval=0.0676  VRAM=17.6GB
+Split 3 Ep 35/40: Train=0.0133  Eval=0.0677  VRAM=17.6GB
+Split 3 Ep 36/40: Train=0.0121  Eval=0.0675  VRAM=17.6GB
+  -> Saved best: 0.0675
+Split 3 Ep 37/40: Train=0.0112  Eval=0.0675  VRAM=17.6GB
+  -> Saved best: 0.0675
+Split 3 Ep 38/40: Train=0.0106  Eval=0.0675  VRAM=17.6GB
+Split 3 Ep 39/40: Train=0.0103  Eval=0.0675  VRAM=17.6GB
+Split 3 Ep 40/40: Train=0.0101  Eval=0.0675  VRAM=17.6GB
+
+--- Split 4 ---
+Split 4 Ep 01/40: Train=0.2184  Eval=0.1288  VRAM=17.6GB
+  -> Saved best: 0.1288
+Split 4 Ep 02/40: Train=0.1821  Eval=0.1156  VRAM=17.6GB
+  -> Saved best: 0.1156
+Split 4 Ep 03/40: Train=0.1671  Eval=0.1131  VRAM=17.6GB
+  -> Saved best: 0.1131
+Split 4 Ep 04/40: Train=0.1569  Eval=0.1044  VRAM=17.6GB
+  -> Saved best: 0.1044
+Split 4 Ep 05/40: Train=0.1467  Eval=0.1088  VRAM=17.6GB
+Split 4 Ep 06/40: Train=0.1407  Eval=0.1057  VRAM=17.6GB
+Split 4 Ep 07/40: Train=0.1351  Eval=0.0974  VRAM=17.6GB
+  -> Saved best: 0.0974
+Split 4 Ep 08/40: Train=0.1282  Eval=0.1005  VRAM=17.6GB
+Split 4 Ep 09/40: Train=0.1239  Eval=0.0951  VRAM=17.6GB
+  -> Saved best: 0.0951
+Split 4 Ep 10/40: Train=0.1195  Eval=0.0925  VRAM=17.6GB
+  -> Saved best: 0.0925
+Split 4 Ep 11/40: Train=0.1147  Eval=0.0943  VRAM=17.6GB
+Split 4 Ep 12/40: Train=0.1112  Eval=0.0893  VRAM=17.6GB
+  -> Saved best: 0.0893
+Split 4 Ep 13/40: Train=0.1043  Eval=0.0864  VRAM=17.6GB
+  -> Saved best: 0.0864
+Split 4 Ep 14/40: Train=0.0969  Eval=0.0850  VRAM=17.6GB
+  -> Saved best: 0.0850
+Split 4 Ep 15/40: Train=0.0926  Eval=0.0827  VRAM=17.6GB
+  -> Saved best: 0.0827
+Split 4 Ep 16/40: Train=0.0879  Eval=0.0859  VRAM=17.6GB
+Split 4 Ep 17/40: Train=0.0835  Eval=0.0848  VRAM=17.6GB
+Split 4 Ep 18/40: Train=0.0781  Eval=0.0808  VRAM=17.6GB
+  -> Saved best: 0.0808
+Split 4 Ep 19/40: Train=0.0722  Eval=0.0812  VRAM=17.6GB
+Split 4 Ep 20/40: Train=0.0679  Eval=0.0764  VRAM=17.6GB
+  -> Saved best: 0.0764
+Split 4 Ep 21/40: Train=0.0622  Eval=0.0756  VRAM=17.6GB
+  -> Saved best: 0.0756
+Split 4 Ep 22/40: Train=0.0579  Eval=0.0732  VRAM=17.6GB
+  -> Saved best: 0.0732
+Split 4 Ep 23/40: Train=0.0518  Eval=0.0748  VRAM=17.6GB
+Split 4 Ep 24/40: Train=0.0474  Eval=0.0729  VRAM=17.6GB
+  -> Saved best: 0.0729
+Split 4 Ep 25/40: Train=0.0429  Eval=0.0722  VRAM=17.6GB
+  -> Saved best: 0.0722
+Split 4 Ep 26/40: Train=0.0391  Eval=0.0703  VRAM=17.6GB
+  -> Saved best: 0.0703
+Split 4 Ep 27/40: Train=0.0346  Eval=0.0696  VRAM=17.6GB
+  -> Saved best: 0.0696
+Split 4 Ep 28/40: Train=0.0306  Eval=0.0691  VRAM=17.6GB
+  -> Saved best: 0.0691
+Split 4 Ep 29/40: Train=0.0272  Eval=0.0687  VRAM=17.6GB
+  -> Saved best: 0.0687
+Split 4 Ep 30/40: Train=0.0240  Eval=0.0691  VRAM=17.6GB
+Split 4 Ep 31/40: Train=0.0210  Eval=0.0685  VRAM=17.6GB
+  -> Saved best: 0.0685
+Split 4 Ep 32/40: Train=0.0184  Eval=0.0681  VRAM=17.6GB
+  -> Saved best: 0.0681
+Split 4 Ep 33/40: Train=0.0162  Eval=0.0683  VRAM=17.6GB
+Split 4 Ep 34/40: Train=0.0144  Eval=0.0678  VRAM=17.6GB
+  -> Saved best: 0.0678
+Split 4 Ep 35/40: Train=0.0128  Eval=0.0680  VRAM=17.6GB
+Split 4 Ep 36/40: Train=0.0117  Eval=0.0681  VRAM=17.6GB
+Split 4 Ep 37/40: Train=0.0109  Eval=0.0679  VRAM=17.6GB
+Split 4 Ep 38/40: Train=0.0103  Eval=0.0679  VRAM=17.6GB
+Split 4 Ep 39/40: Train=0.0100  Eval=0.0679  VRAM=17.6GB
+Split 4 Ep 40/40: Train=0.0099  Eval=0.0679  VRAM=17.6GB
+
+Training complete.

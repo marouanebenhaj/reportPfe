@@ -1,0 +1,9 @@
+key,display_name,version,model_name,mean_mae,std_mae,n_splits,mss_avg,mss_fft8192,mss_fft2048,mss_fft512,mss_fft128,mss_n_samples
+v2/convnext-tiny-v2,V2 ConvNeXt-tiny +pitch,v2,convnext-tiny-v2,0.07391,0.00000,1,1.40535,1.39954,1.34982,1.37866,1.49337,100
+v2/convnext-tiny-v2-nopitch,V2 ConvNeXt-tiny,v2,convnext-tiny-v2-nopitch,0.07210,0.00000,1,1.38284,1.39028,1.33692,1.34655,1.45760,100
+v2/ast-small-v2,V2 AST-small +pitch,v2,ast-small-v2,0.07553,0.00000,1,1.29154,1.27867,1.21803,1.26659,1.40288,100
+v2/ast-small-v2-nopitch,V2 AST-small,v2,ast-small-v2-nopitch,0.07832,0.00000,1,1.27321,1.27528,1.22659,1.23015,1.36083,100
+v3/convnext-tiny-v2,V3 ConvNeXt-tiny +pitch,v3,convnext-tiny-v2,0.05296,0.00000,1,1.22155,1.17333,1.14480,1.21324,1.35482,100
+v3/convnext-tiny-v2-nopitch,V3 ConvNeXt-tiny,v3,convnext-tiny-v2-nopitch,0.05498,0.00000,1,1.26357,1.23096,1.19669,1.25431,1.37232,100
+v3/ast-small-v2,V3 AST-small +pitch,v3,ast-small-v2,0.05248,0.00000,1,1.09566,1.04299,1.01850,1.09129,1.22987,100
+v3/ast-small-v2-nopitch,V3 AST-small,v3,ast-small-v2-nopitch,0.05596,0.00000,1,1.11903,1.07911,1.04749,1.10117,1.24834,100

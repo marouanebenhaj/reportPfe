@@ -1,0 +1,246 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Results and Findings          %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{RESULTS AND FINDINGS}
+
+\noindent
+This section presents the quantitative results and empirical findings across the three experimental iterations. Section~\ref{subsec:rq1} addresses RQ1 by comparing the three V1 backbone architectures across three pitch conditioning strategies. Section~\ref{subsec:rq2} addresses RQ2 by evaluating the contribution of multi-scale mel input and the remaining V2 architectural enhancements. Section~\ref{subsec:rq3} addresses RQ3 by examining FiLM pitch conditioning effectiveness under the single-pitch and multi-pitch data regimes, culminating in the V3 perceptual evaluation.
+
+% ═══════════════════════════════════════════════════════════
+\subsection{RQ1: Architecture and Pitch Conditioning Comparison}
+\label{subsec:rq1}
+
+\noindent
+To address the first research question, each of the three backbone families — SynthParamNet (CNN), AST-small, and ConvNeXt-tiny — was trained under three pitch conditioning strategies — no pitch, basic MLP, and sinusoidal embedding — yielding nine configurations evaluated over five stratified folds. Table~\ref{tab:v1_results} reports the five-fold test MAE for all nine configurations, with the AST-small no-pitch variant used as the reference point that approximates the Bruford et al.\ setup \cite{bruford2024ast}.
+
+\begin{table}[H]
+\centering
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{llcc}
+\hline
+\textbf{Backbone} & \textbf{Pitch Conditioning} & \textbf{MAE (mean $\pm$ std)} & \textbf{$\Delta$ vs baseline} \\
+\hline
+\multirow{3}{*}{SynthParamNet (CNN)}
+  & No pitch      & $0.0850 \pm 0.0014$ & $+0.0057$ \\
+  & Basic MLP     & $0.0828 \pm 0.0007$ & $+0.0035$ \\
+  & Sinusoidal    & $0.0829 \pm 0.0008$ & $+0.0036$ \\
+\hline
+\multirow{3}{*}{AST-small}
+  & No pitch$^{\dagger}$ & $0.0793 \pm 0.0006$ & --- \\
+  & Basic MLP     & $0.0781 \pm 0.0005$ & $-0.0012$ \\
+  & Sinusoidal    & $0.0776 \pm 0.0007$ & $-0.0017$ \\
+\hline
+\multirow{3}{*}{ConvNeXt-tiny}
+  & No pitch      & $0.0767 \pm 0.0004$ & $-0.0026$ \\
+  & Basic MLP     & $0.0765 \pm 0.0007$ & $-0.0028$ \\
+  & \textbf{Sinusoidal} & $\mathbf{0.0758 \pm 0.0005}$ & $\mathbf{-0.0035}$ \\
+\hline
+\end{tabular}
+\vspace{0.3cm}
+\caption{V1 five-fold test MAE across all nine backbone $\times$ pitch conditioning configurations. $\Delta$ is computed relative to the AST-small no-pitch baseline ($^{\dagger}$), which approximates the Bruford et al.\ \cite{bruford2024ast} setup. Best result in bold.}
+\label{tab:v1_results}
+\end{table}
+
+\noindent
+Three consistent patterns emerge from Table~\ref{tab:v1_results}, illustrated in Figure~\ref{fig:v1_architecture}. First, ConvNeXt-tiny outperforms AST-small in every pitch conditioning condition, with gaps ranging from $0.0009$ to $0.0017$ MAE. At the $\approx 42{,}520$-sample scale, the local convolutional inductive bias of ConvNeXt extracts more discriminative timbral features from mel spectrograms than the global self-attention of AST. Second, the SynthParamNet CNN underperforms both pre-trained backbones across all conditions, confirming that ImageNet-22k pre-training provides representations that transfer effectively to mel-spectrogram regression even with single-channel adaptation. Third, explicit pitch conditioning consistently reduces MAE for all three backbones: the sinusoidal embedding outperforms the basic MLP in five of six comparisons and outperforms no-pitch in all six.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{figs/fig_v1_architecture.pdf}
+\caption{V1 five-fold test MAE for all nine configurations. The dotted red line marks the AST-small no-pitch reference. ConvNeXt-tiny with sinusoidal embedding achieves the lowest MAE in V1.}
+\label{fig:v1_architecture}
+\end{figure}
+
+\noindent
+The improvement from sinusoidal conditioning over no-pitch is most pronounced for the \texttt{oscillator\_2\_transpose} parameter — the parameter whose ground truth is most directly related to the input pitch — and is consistent across all five folds. The basic MLP and sinusoidal variants yield comparable gains for envelope and filter parameters, where the pitch signal provides less direct information. These findings establish ConvNeXt-tiny with sinusoidal pitch embedding as the V1 champion and motivate the architectural direction pursued in V2.
+
+% ═══════════════════════════════════════════════════════════
+\subsection{RQ2: Effect of Multi-Scale Input and Architectural Enhancements}
+\label{subsec:rq2}
+
+\noindent
+To address the second research question, the V2 architecture introduces four joint enhancements over V1: a three-channel multi-scale mel input (fine, mid, and coarse), FiLM-based pitch conditioning, a grouped prediction head, and a group-weighted SmoothL1 training objective. To isolate the contribution of pitch conditioning from the remaining enhancements, each V2 backbone is trained in both a full FiLM variant and a no-pitch variant that removes the FiLM branch entirely while retaining all other V2 components. Table~\ref{tab:v2_results} reports the five-fold test MAE for the four V2 configurations alongside the V1 best and baseline.
+
+\begin{table}[H]
+\centering
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{llcc}
+\hline
+\textbf{Version} & \textbf{Model} & \textbf{MAE (mean $\pm$ std)} & \textbf{$\Delta$ vs V1 baseline} \\
+\hline
+V1 & AST-small, no pitch (baseline) & $0.0793 \pm 0.0006$ & --- \\
+V1 & ConvNeXt-tiny, sinusoidal (V1 best) & $0.0758 \pm 0.0005$ & $-4.4\%$ \\
+\hline
+V2 & ConvNeXt-tiny, no pitch & $0.0681 \pm 0.0002$ & $-14.1\%$ \\
+V2 & AST-small, no pitch & $0.0727 \pm 0.0003$ & $-8.3\%$ \\
+V2 & AST-small, FiLM & $0.0713 \pm 0.0003$ & $-10.1\%$ \\
+V2 & \textbf{ConvNeXt-tiny, FiLM} & $\mathbf{0.0665 \pm 0.0002}$ & $\mathbf{-16.1\%}$ \\
+\hline
+\end{tabular}
+\vspace{0.3cm}
+\caption{Five-fold test MAE for V1 reference configurations and all four V2 variants. The ConvNeXt-tiny no-pitch row isolates the contribution of the non-pitch V2 components (multi-scale input, grouped head, weighted loss) from the FiLM conditioning effect.}
+\label{tab:v2_results}
+\end{table}
+
+\noindent
+The no-pitch V2 ConvNeXt model ($0.0681 \pm 0.0002$) already surpasses the best V1 model ($0.0758 \pm 0.0005$) by $10.2\%$, despite receiving no pitch information. This improvement can be attributed directly to the three non-pitch V2 components: the three-channel multi-scale mel input provides complementary timbral and harmonic cues unavailable to the single mid-scale V1 input; the grouped prediction head allocates wider sub-networks to the harder oscillator parameters; and the group-weighted loss focuses training capacity on those parameters. This comparison directly answers RQ2: the multi-scale mel representation, in combination with the architectural enhancements, delivers a substantial and consistent improvement over single-scale input irrespective of pitch conditioning.
+
+\noindent \newline
+The FiLM conditioning adds a further $-0.0016$ MAE ($2.4\%$) for ConvNeXt and $-0.0014$ ($1.9\%$) for AST, with consistent improvement across all five folds. While statistically reliable, the magnitude of this benefit is modest, a pattern examined in depth under RQ3. Figure~\ref{fig:convergence} reveals a second V2 limitation: training MAE descends well below $0.020$ by epoch 40 while validation MAE plateaus near $0.067$, producing a pronounced train-to-validation gap that indicates partial memorisation of the training distribution. The right panel confirms that V3's multi-pitch data expansion substantially narrows this gap.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{figs/fig_convergence.pdf}
+\caption{Training convergence for V2 (ConvNeXt-tiny + FiLM, split~0) and V3 (AST-small + FiLM). The shaded region on the V2 panel highlights the train-to-validation gap that motivates the dataset expansion in V3.}
+\label{fig:convergence}
+\end{figure}
+
+% ═══════════════════════════════════════════════════════════
+\subsection{RQ3: FiLM Conditioning Effectiveness and the Role of Multi-Pitch Data}
+\label{subsec:rq3}
+
+\noindent
+To address the third research question, the FiLM-conditioned versus no-pitch ablation from V2 is repeated under the V3 training regime: the same $\approx 42{,}520$ presets re-rendered at three fixed MIDI pitches each ($\approx 170{,}000$ samples total), with SpecAugment regularisation applied online. All four V3 models are trained on a single 80/10/10 preset-level split; MAE values are therefore reported without cross-validation standard deviations.
+
+\subsubsection{FiLM Conditioning Gap: V2 vs V3}
+
+\noindent
+Table~\ref{tab:film_gap} presents the FiLM conditioning gap for both backbones under both data regimes. Figure~\ref{fig:film_gap} visualises the results.
+
+\begin{table}[H]
+\centering
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{llllcc}
+\hline
+\textbf{Version} & \textbf{Backbone} & \textbf{Dataset} & \textbf{Pitch} & \textbf{MAE} & \textbf{FiLM gain} \\
+\hline
+\multirow{4}{*}{V2}
+  & \multirow{2}{*}{ConvNeXt-tiny} & \multirow{2}{*}{42k, 5-fold} & FiLM     & $0.0665 \pm 0.0002$ & \multirow{2}{*}{$-0.0016$ ($-2.4\%$)} \\
+  &                                &                              & No pitch & $0.0681 \pm 0.0002$ & \\
+  \cline{2-6}
+  & \multirow{2}{*}{AST-small}     & \multirow{2}{*}{42k, 5-fold} & FiLM     & $0.0713 \pm 0.0003$ & \multirow{2}{*}{$-0.0014$ ($-1.9\%$)} \\
+  &                                &                              & No pitch & $0.0727 \pm 0.0003$ & \\
+\hline
+\multirow{4}{*}{V3}
+  & \multirow{2}{*}{ConvNeXt-tiny} & \multirow{2}{*}{170k, single} & FiLM    & $0.0530$ & \multirow{2}{*}{$-0.0020$ ($-3.7\%$)} \\
+  &                                &                               & No pitch & $0.0550$ & \\
+  \cline{2-6}
+  & \multirow{2}{*}{AST-small}     & \multirow{2}{*}{170k, single} & \textbf{FiLM}    & $\mathbf{0.0525}$ & \multirow{2}{*}{$-0.0035$ ($-6.2\%$)} \\
+  &                                &                               & No pitch & $0.0560$ & \\
+\hline
+\end{tabular}
+\vspace{0.3cm}
+\caption{FiLM conditioning gain for ConvNeXt-tiny and AST-small under V2 (single-pitch, 5-fold CV) and V3 (multi-pitch, single split) data regimes. The growing gap from V2 to V3 confirms that multi-pitch training data amplifies the effectiveness of FiLM pitch conditioning.}
+\label{tab:film_gap}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{figs/fig_film_gap.pdf}
+\caption{FiLM vs no-pitch MAE for both backbones in V2 and V3. The annotated $\Delta$ values show the FiLM gain growing from V2 to V3, particularly for AST-small.}
+\label{fig:film_gap}
+\end{figure}
+
+\noindent
+The primary hypothesis of RQ3 is confirmed. In V2, FiLM conditioning yields a small but statistically consistent benefit under single-pitch training: each preset appears in the training set at exactly one spectral position, giving the conditioning pathway only a weak incentive to learn pitch-dependent feature modulation. Under V3's multi-pitch regime — where the same parameter vector $\mathbf{y}$ appears paired with three spectrally distinct inputs — the FiLM gain grows to $-0.0020$ for ConvNeXt ($3.7\%$) and $-0.0035$ for AST ($6.2\%$), confirming that rendering each preset at multiple MIDI pitches is the necessary condition for the conditioning pathway to operate as intended.
+
+\noindent \newline
+A second notable finding is the reversal of the backbone ranking. ConvNeXt-tiny outperformed AST-small in all V1 and V2 conditions; in V3, AST-small surpasses ConvNeXt on all four model variants. The best V3 model — AST-small with FiLM ($0.0525$) — achieves $-33.8\%$ MAE relative to the V1 baseline ($0.0793$). This inversion is consistent with the scaling behaviour of Vision Transformer architectures \cite{dosovitskiy2021vit}: global self-attention over the full mel frame captures inter-frequency dependencies — such as the harmonic series structure of pitched sounds — that local convolutions cannot model as efficiently, but only when the training data is large enough to learn those global patterns reliably.
+
+\subsubsection{Cross-Iteration Summary}
+
+\noindent
+Table~\ref{tab:summary} summarises the headline MAE and Multi-Scale Spectral (MSS) loss results across all iterations. The MSS metric is evaluated on a fixed shared set of 100 held-out samples by passing the predicted parameter vector through Vital and computing the mean absolute log-spectrogram difference across four FFT scales; lower values indicate closer spectral agreement between original and re-rendered audio.
+
+\begin{table}[H]
+\centering
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{llccccc}
+\hline
+\textbf{Ver.} & \textbf{Model} & \textbf{Pitch} & \textbf{Data} & \textbf{MAE} & \textbf{MSS} & \textbf{$\Delta$ MAE} \\
+\hline
+V1 & AST-small     & No pitch   & 42k & $0.0793 \pm 0.0006$ & ---   & --- \\
+V1 & ConvNeXt-tiny & Sinusoidal & 42k & $0.0758 \pm 0.0005$ & ---   & $-4.4\%$ \\
+\hline
+V2 & ConvNeXt-tiny & FiLM       & 42k & $0.0665 \pm 0.0002$ & 1.405 & $-16.1\%$ \\
+V2 & AST-small     & FiLM       & 42k & $0.0713 \pm 0.0003$ & 1.292 & $-10.1\%$ \\
+\hline
+V3 & ConvNeXt-tiny & FiLM       & 170k & $0.0530$ & 1.222 & $-33.2\%$ \\
+V3 & \textbf{AST-small} & \textbf{FiLM} & \textbf{170k} & $\mathbf{0.0525}$ & $\mathbf{1.096}$ & $\mathbf{-33.8\%}$ \\
+\hline
+\end{tabular}
+\vspace{0.3cm}
+\caption{Cross-iteration headline results. MAE values for V3 are from a single 80/10/10 split; V1 and V2 values are five-fold averages. MSS is evaluated on the shared 100-sample held-out set (V3 evaluation protocol); lower is better for both metrics.}
+\label{tab:summary}
+\end{table}
+
+\subsubsection{Perceptual Evaluation: Multi-Scale Spectral Loss}
+
+\noindent
+Figure~\ref{fig:mss_scales} shows the MSS loss broken down across the four evaluation FFT scales for all four V2 and V3 models. The improvement from V2 to V3 is consistent across all scales: from the energy-sensitive $n_{\text{fft}}=128$ band to the harmonic-sensitive $n_{\text{fft}}=8{,}192$ band, each V3 model outperforms its V2 counterpart. This consistency confirms that V3's gains are not confined to a single aspect of the audio spectrum but reflect a broadly more accurate parameter reconstruction.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{figs/fig_mss_scales.pdf}
+\caption{Multi-Scale Spectral loss across four FFT scales for all V2 and V3 models (shared eval set, $N=100$). Solid lines: V3 models. Dashed lines: V2 models. Lower is better.}
+\label{fig:mss_scales}
+\end{figure}
+
+\noindent
+An interesting discrepancy is observed in V2: the no-pitch variants achieve lower MSS than their FiLM counterparts (ConvNeXt no-pitch: $1.383$ vs FiLM: $1.405$; AST no-pitch: $1.273$ vs FiLM: $1.292$), despite FiLM being superior on parameter-space MAE. This reversal does not occur in V3, where FiLM models outperform no-pitch on both MAE and MSS. A plausible explanation is that under single-pitch training, the FiLM pathway learns to exploit absolute spectral position as a shortcut rather than true pitch normalisation; when this behaviour transfers to the shared eval set — which is also single-pitch per preset — the conditioned features carry pitch-specific biases that inflate the spectral reconstruction error. V3's multi-pitch training eliminates this shortcut, allowing FiLM to learn genuinely pitch-invariant representations.
+
+\subsubsection{Per-Parameter Analysis}
+
+\noindent
+Table~\ref{tab:per_param} and Figure~\ref{fig:per_param} report the per-parameter MAE for the best model at each iteration: V1 (ConvNeXt-tiny, sinusoidal), V2 (ConvNeXt-tiny, FiLM), and V3 (AST-small, FiLM).
+
+\begin{table}[H]
+\centering
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{llccc}
+\hline
+\textbf{Group} & \textbf{Parameter} & \textbf{V1 best} & \textbf{V2 best} & \textbf{V3 best} \\
+\hline
+\multirow{7}{*}{Oscillator}
+  & \texttt{osc1\_wave\_frame}    & 0.1329 & 0.1209 & 0.1015 \\
+  & \texttt{osc1\_level}          & 0.1165 & 0.0989 & 0.0823 \\
+  & \texttt{osc1\_unison\_voices} & 0.1083 & 0.1010 & 0.1022 \\
+  & \texttt{osc1\_unison\_detune} & 0.0864 & 0.0789 & 0.0681 \\
+  & \texttt{osc2\_wave\_frame}    & 0.1597 & 0.1508 & 0.1205 \\
+  & \texttt{osc2\_level}          & 0.1305 & 0.1081 & 0.0868 \\
+  & \texttt{osc2\_transpose}      & 0.0951 & 0.0622 & 0.0308 \\
+\hline
+\multirow{4}{*}{Envelope}
+  & \texttt{env1\_attack}         & 0.0233 & 0.0184 & 0.0117 \\
+  & \texttt{env1\_decay}          & 0.0196 & 0.0155 & 0.0103 \\
+  & \texttt{env2\_attack}         & 0.0354 & 0.0343 & 0.0237 \\
+  & \texttt{env2\_decay}          & 0.0276 & 0.0277 & 0.0213 \\
+\hline
+\multirow{2}{*}{Filter}
+  & \texttt{filter1\_cutoff}      & 0.0413 & 0.0378 & 0.0294 \\
+  & \texttt{filter1\_resonance}   & 0.0670 & 0.0665 & 0.0498 \\
+\hline
+\multirow{3}{*}{Misc}
+  & \texttt{sample\_level}        & 0.0784 & 0.0583 & 0.0457 \\
+  & \texttt{mod1\_amount}         & 0.0352 & 0.0359 & 0.0290 \\
+  & \texttt{reverb\_mix}          & 0.0467 & 0.0426 & 0.0266 \\
+\hline
+\end{tabular}
+\vspace{0.3cm}
+\caption{Per-parameter MAE for the best model at each iteration. V1 best: ConvNeXt-tiny with sinusoidal embedding. V2 best: ConvNeXt-tiny with FiLM. V3 best: AST-small with FiLM.}
+\label{tab:per_param}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{figs/fig_per_param.pdf}
+\caption{Per-parameter MAE across iterations. Background shading denotes parameter group (blue: oscillator, green: envelope, pink: filter, orange: misc). The oscillator group shows the largest absolute improvement; envelope parameters approach near-ceiling performance by V3.}
+\label{fig:per_param}
+\end{figure}
+
+\noindent
+Several patterns are evident. The oscillator group consistently yields the highest absolute MAE across all iterations, with \texttt{osc2\_wave\_frame} and \texttt{osc1\_wave\_frame} remaining the hardest parameters even in V3 ($0.1205$ and $0.1015$ respectively). These parameters encode the wavetable position — a continuous one-dimensional index into a high-dimensional waveform space — and their non-linear relationship to the mel spectrogram makes them inherently difficult to regress from audio alone. Envelope parameters (\texttt{env1\_attack}, \texttt{env1\_decay}) are already well-predicted in V1 and approach near-ceiling performance in V3, consistent with their direct observability as the amplitude trajectory of the spectrogram.
+
+\noindent \newline
+The most notable single-parameter improvement across iterations is \texttt{osc2\_transpose}, whose MAE drops from $0.0951$ in V1 to $0.0622$ in V2 and $0.0308$ in V3 — a $67.6\%$ reduction from V1 to V3. This parameter encodes the pitch offset of the second oscillator in semitones, and its dramatic improvement in V3 directly reflects the effect of multi-pitch training: when the model observes the same preset at three pitch positions, the relationship between the MIDI pitch input and oscillator transposition becomes directly learnable, and the FiLM conditioning pathway can modulate features accordingly. The \texttt{sample\_level} parameter also shows marked improvement from V2 ($0.0583$) to V3 ($0.0457$), likely due to the increased training set diversity reducing spectral pattern memorisation. The \texttt{osc1\_unison\_voices} parameter — a discrete parameter encoding the number of unison voices — remains stubbornly high in V3 ($0.1022$), suggesting that discrete-valued parameters with non-monotonic spectral effects require further specialisation beyond what the current continuous regression formulation provides.

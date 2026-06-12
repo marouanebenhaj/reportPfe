@@ -1,0 +1,740 @@
+Training convnext-tiny
+=================
+Device: cuda | Checkpoints: C:\Users\Professor\Documents\MarouaneBenHajHassineCapstone\SynthInv\pfe\checkpoints\convnext-tiny
+✅ Using Optimized AST Collate (128x224, No Vertical Padding)
+
+--- Split 0 ---
+Total Parameters: 28,254,800
+Trainable Parameters: 28,254,800
+Split 0 Ep 1: Train=0.1834 Eval=0.1517
+  Saved Best: 0.1517
+Split 0 Ep 2: Train=0.1380 Eval=0.1335
+  Saved Best: 0.1335
+Split 0 Ep 3: Train=0.1239 Eval=0.1232
+  Saved Best: 0.1232
+Split 0 Ep 4: Train=0.1141 Eval=0.1154
+  Saved Best: 0.1154
+Split 0 Ep 5: Train=0.1066 Eval=0.1099
+  Saved Best: 0.1099
+Split 0 Ep 6: Train=0.1014 Eval=0.1061
+  Saved Best: 0.1061
+Split 0 Ep 7: Train=0.0969 Eval=0.1029
+  Saved Best: 0.1029
+Split 0 Ep 8: Train=0.0933 Eval=0.1011
+  Saved Best: 0.1011
+Split 0 Ep 9: Train=0.0899 Eval=0.0985
+  Saved Best: 0.0985
+Split 0 Ep 10: Train=0.0867 Eval=0.0969
+  Saved Best: 0.0969
+Split 0 Ep 11: Train=0.0838 Eval=0.0966
+  Saved Best: 0.0966
+Split 0 Ep 12: Train=0.0810 Eval=0.0930
+  Saved Best: 0.0930
+Split 0 Ep 13: Train=0.0784 Eval=0.0918
+  Saved Best: 0.0918
+Split 0 Ep 14: Train=0.0757 Eval=0.0925
+Split 0 Ep 15: Train=0.0731 Eval=0.0900
+  Saved Best: 0.0900
+Split 0 Ep 16: Train=0.0710 Eval=0.0907
+Split 0 Ep 17: Train=0.0683 Eval=0.0897
+  Saved Best: 0.0897
+Split 0 Ep 18: Train=0.0659 Eval=0.0879
+  Saved Best: 0.0879
+Split 0 Ep 19: Train=0.0639 Eval=0.0898
+Split 0 Ep 20: Train=0.0620 Eval=0.0890
+Split 0 Ep 21: Train=0.0596 Eval=0.0893
+Split 0 Ep 22: Train=0.0578 Eval=0.0881
+Split 0 Ep 23: Train=0.0553 Eval=0.0887
+Split 0 Ep 24: Train=0.0538 Eval=0.0898
+Split 0 Ep 25: Train=0.0520 Eval=0.0876
+  Saved Best: 0.0876
+Split 0 Ep 26: Train=0.0500 Eval=0.0883
+Split 0 Ep 27: Train=0.0491 Eval=0.0869
+  Saved Best: 0.0869
+Split 0 Ep 28: Train=0.0466 Eval=0.0864
+  Saved Best: 0.0864
+Split 0 Ep 29: Train=0.0445 Eval=0.0854
+  Saved Best: 0.0854
+Split 0 Ep 30: Train=0.0435 Eval=0.0846
+  Saved Best: 0.0846
+Split 0 Ep 31: Train=0.0418 Eval=0.0848
+Split 0 Ep 32: Train=0.0403 Eval=0.0835
+  Saved Best: 0.0835
+Split 0 Ep 33: Train=0.0392 Eval=0.0846
+Split 0 Ep 34: Train=0.0376 Eval=0.0830
+  Saved Best: 0.0830
+Split 0 Ep 35: Train=0.0364 Eval=0.0823
+  Saved Best: 0.0823
+Split 0 Ep 36: Train=0.0349 Eval=0.0819
+  Saved Best: 0.0819
+Split 0 Ep 37: Train=0.0342 Eval=0.0825
+Split 0 Ep 38: Train=0.0338 Eval=0.0833
+Split 0 Ep 39: Train=0.0325 Eval=0.0811
+  Saved Best: 0.0811
+Split 0 Ep 40: Train=0.0318 Eval=0.0814
+Split 0 Ep 41: Train=0.0308 Eval=0.0810
+  Saved Best: 0.0810
+Split 0 Ep 42: Train=0.0302 Eval=0.0812
+Split 0 Ep 43: Train=0.0292 Eval=0.0804
+  Saved Best: 0.0804
+Split 0 Ep 44: Train=0.0284 Eval=0.0806
+Split 0 Ep 45: Train=0.0277 Eval=0.0805
+Split 0 Ep 46: Train=0.0271 Eval=0.0810
+Split 0 Ep 47: Train=0.0262 Eval=0.0798
+  Saved Best: 0.0798
+Split 0 Ep 48: Train=0.0259 Eval=0.0800
+Split 0 Ep 49: Train=0.0252 Eval=0.0799
+Split 0 Ep 50: Train=0.0245 Eval=0.0799
+Split 0 Ep 51: Train=0.0239 Eval=0.0797
+  Saved Best: 0.0797
+Split 0 Ep 52: Train=0.0235 Eval=0.0800
+Split 0 Ep 53: Train=0.0228 Eval=0.0791
+  Saved Best: 0.0791
+Split 0 Ep 54: Train=0.0224 Eval=0.0785
+  Saved Best: 0.0785
+Split 0 Ep 55: Train=0.0219 Eval=0.0791
+Split 0 Ep 56: Train=0.0214 Eval=0.0784
+  Saved Best: 0.0784
+Split 0 Ep 57: Train=0.0207 Eval=0.0787
+Split 0 Ep 58: Train=0.0204 Eval=0.0791
+Split 0 Ep 59: Train=0.0200 Eval=0.0784
+  Saved Best: 0.0784
+Split 0 Ep 60: Train=0.0196 Eval=0.0779
+  Saved Best: 0.0779
+Split 0 Ep 61: Train=0.0189 Eval=0.0778
+  Saved Best: 0.0778
+Split 0 Ep 62: Train=0.0185 Eval=0.0779
+Split 0 Ep 63: Train=0.0182 Eval=0.0784
+Split 0 Ep 64: Train=0.0178 Eval=0.0774
+  Saved Best: 0.0774
+Split 0 Ep 65: Train=0.0173 Eval=0.0778
+Split 0 Ep 66: Train=0.0170 Eval=0.0775
+Split 0 Ep 67: Train=0.0166 Eval=0.0774
+  Saved Best: 0.0774
+Split 0 Ep 68: Train=0.0162 Eval=0.0773
+  Saved Best: 0.0773
+Split 0 Ep 69: Train=0.0159 Eval=0.0777
+Split 0 Ep 70: Train=0.0155 Eval=0.0775
+Split 0 Ep 71: Train=0.0152 Eval=0.0772
+  Saved Best: 0.0772
+Split 0 Ep 72: Train=0.0148 Eval=0.0772
+Split 0 Ep 73: Train=0.0145 Eval=0.0774
+Split 0 Ep 74: Train=0.0142 Eval=0.0772
+  Saved Best: 0.0772
+Split 0 Ep 75: Train=0.0139 Eval=0.0774
+Split 0 Ep 76: Train=0.0135 Eval=0.0769
+  Saved Best: 0.0769
+Split 0 Ep 77: Train=0.0133 Eval=0.0772
+Split 0 Ep 78: Train=0.0129 Eval=0.0770
+Split 0 Ep 79: Train=0.0127 Eval=0.0771
+Split 0 Ep 80: Train=0.0125 Eval=0.0771
+Split 0 Ep 81: Train=0.0122 Eval=0.0769
+  Saved Best: 0.0769
+Split 0 Ep 82: Train=0.0120 Eval=0.0771
+Split 0 Ep 83: Train=0.0118 Eval=0.0771
+Split 0 Ep 84: Train=0.0116 Eval=0.0770
+Split 0 Ep 85: Train=0.0114 Eval=0.0770
+Split 0 Ep 86: Train=0.0113 Eval=0.0769
+Split 0 Ep 87: Train=0.0111 Eval=0.0771
+Split 0 Ep 88: Train=0.0109 Eval=0.0769
+  Saved Best: 0.0769
+Split 0 Ep 89: Train=0.0107 Eval=0.0769
+Split 0 Ep 90: Train=0.0106 Eval=0.0770
+Split 0 Ep 91: Train=0.0105 Eval=0.0770
+Split 0 Ep 92: Train=0.0104 Eval=0.0770
+Split 0 Ep 93: Train=0.0103 Eval=0.0770
+Split 0 Ep 94: Train=0.0102 Eval=0.0770
+Split 0 Ep 95: Train=0.0103 Eval=0.0770
+Split 0 Ep 96: Train=0.0102 Eval=0.0770
+Split 0 Ep 97: Train=0.0101 Eval=0.0770
+Split 0 Ep 98: Train=0.0101 Eval=0.0770
+Split 0 Ep 99: Train=0.0101 Eval=0.0770
+Split 0 Ep 100: Train=0.0101 Eval=0.0770
+
+--- Split 1 ---
+Split 1 Ep 1: Train=0.1783 Eval=0.1473
+  Saved Best: 0.1473
+Split 1 Ep 2: Train=0.1345 Eval=0.1305
+  Saved Best: 0.1305
+Split 1 Ep 3: Train=0.1209 Eval=0.1202
+  Saved Best: 0.1202
+Split 1 Ep 4: Train=0.1119 Eval=0.1134
+  Saved Best: 0.1134
+Split 1 Ep 5: Train=0.1060 Eval=0.1087
+  Saved Best: 0.1087
+Split 1 Ep 6: Train=0.1006 Eval=0.1050
+  Saved Best: 0.1050
+Split 1 Ep 7: Train=0.0966 Eval=0.1031
+  Saved Best: 0.1031
+Split 1 Ep 8: Train=0.0931 Eval=0.1004
+  Saved Best: 0.1004
+Split 1 Ep 9: Train=0.0895 Eval=0.0960
+  Saved Best: 0.0960
+Split 1 Ep 10: Train=0.0860 Eval=0.0967
+Split 1 Ep 11: Train=0.0834 Eval=0.0948
+  Saved Best: 0.0948
+Split 1 Ep 12: Train=0.0810 Eval=0.0932
+  Saved Best: 0.0932
+Split 1 Ep 13: Train=0.0779 Eval=0.0913
+  Saved Best: 0.0913
+Split 1 Ep 14: Train=0.0755 Eval=0.0916
+Split 1 Ep 15: Train=0.0726 Eval=0.0930
+Split 1 Ep 16: Train=0.0708 Eval=0.0900
+  Saved Best: 0.0900
+Split 1 Ep 17: Train=0.0678 Eval=0.0907
+Split 1 Ep 18: Train=0.0659 Eval=0.0885
+  Saved Best: 0.0885
+Split 1 Ep 19: Train=0.0636 Eval=0.0876
+  Saved Best: 0.0876
+Split 1 Ep 20: Train=0.0615 Eval=0.0882
+Split 1 Ep 21: Train=0.0593 Eval=0.0873
+  Saved Best: 0.0873
+Split 1 Ep 22: Train=0.0580 Eval=0.0867
+  Saved Best: 0.0867
+Split 1 Ep 23: Train=0.0556 Eval=0.0853
+  Saved Best: 0.0853
+Split 1 Ep 24: Train=0.0536 Eval=0.0873
+Split 1 Ep 25: Train=0.0522 Eval=0.0845
+  Saved Best: 0.0845
+Split 1 Ep 26: Train=0.0498 Eval=0.0871
+Split 1 Ep 27: Train=0.0488 Eval=0.0838
+  Saved Best: 0.0838
+Split 1 Ep 28: Train=0.0464 Eval=0.0842
+Split 1 Ep 29: Train=0.0446 Eval=0.0833
+  Saved Best: 0.0833
+Split 1 Ep 30: Train=0.0428 Eval=0.0838
+Split 1 Ep 31: Train=0.0415 Eval=0.0836
+Split 1 Ep 32: Train=0.0401 Eval=0.0831
+  Saved Best: 0.0831
+Split 1 Ep 33: Train=0.0387 Eval=0.0832
+Split 1 Ep 34: Train=0.0373 Eval=0.0820
+  Saved Best: 0.0820
+Split 1 Ep 35: Train=0.0363 Eval=0.0849
+Split 1 Ep 36: Train=0.0349 Eval=0.0808
+  Saved Best: 0.0808
+Split 1 Ep 37: Train=0.0338 Eval=0.0806
+  Saved Best: 0.0806
+Split 1 Ep 38: Train=0.0332 Eval=0.0807
+Split 1 Ep 39: Train=0.0321 Eval=0.0804
+  Saved Best: 0.0804
+Split 1 Ep 40: Train=0.0314 Eval=0.0804
+Split 1 Ep 41: Train=0.0306 Eval=0.0812
+Split 1 Ep 42: Train=0.0296 Eval=0.0804
+  Saved Best: 0.0804
+Split 1 Ep 43: Train=0.0287 Eval=0.0803
+  Saved Best: 0.0803
+Split 1 Ep 44: Train=0.0283 Eval=0.0802
+  Saved Best: 0.0802
+Split 1 Ep 45: Train=0.0274 Eval=0.0794
+  Saved Best: 0.0794
+Split 1 Ep 46: Train=0.0267 Eval=0.0798
+Split 1 Ep 47: Train=0.0262 Eval=0.0793
+  Saved Best: 0.0793
+Split 1 Ep 48: Train=0.0255 Eval=0.0805
+Split 1 Ep 49: Train=0.0250 Eval=0.0788
+  Saved Best: 0.0788
+Split 1 Ep 50: Train=0.0241 Eval=0.0790
+Split 1 Ep 51: Train=0.0235 Eval=0.0782
+  Saved Best: 0.0782
+Split 1 Ep 52: Train=0.0229 Eval=0.0782
+  Saved Best: 0.0782
+Split 1 Ep 53: Train=0.0225 Eval=0.0777
+  Saved Best: 0.0777
+Split 1 Ep 54: Train=0.0221 Eval=0.0777
+  Saved Best: 0.0777
+Split 1 Ep 55: Train=0.0213 Eval=0.0779
+Split 1 Ep 56: Train=0.0211 Eval=0.0774
+  Saved Best: 0.0774
+Split 1 Ep 57: Train=0.0204 Eval=0.0776
+Split 1 Ep 58: Train=0.0199 Eval=0.0775
+Split 1 Ep 59: Train=0.0197 Eval=0.0772
+  Saved Best: 0.0772
+Split 1 Ep 60: Train=0.0192 Eval=0.0771
+  Saved Best: 0.0771
+Split 1 Ep 61: Train=0.0187 Eval=0.0773
+Split 1 Ep 62: Train=0.0182 Eval=0.0768
+  Saved Best: 0.0768
+Split 1 Ep 63: Train=0.0179 Eval=0.0771
+Split 1 Ep 64: Train=0.0175 Eval=0.0765
+  Saved Best: 0.0765
+Split 1 Ep 65: Train=0.0170 Eval=0.0767
+Split 1 Ep 66: Train=0.0166 Eval=0.0766
+Split 1 Ep 67: Train=0.0162 Eval=0.0765
+Split 1 Ep 68: Train=0.0158 Eval=0.0764
+  Saved Best: 0.0764
+Split 1 Ep 69: Train=0.0155 Eval=0.0764
+  Saved Best: 0.0764
+Split 1 Ep 70: Train=0.0151 Eval=0.0765
+Split 1 Ep 71: Train=0.0148 Eval=0.0762
+  Saved Best: 0.0762
+Split 1 Ep 72: Train=0.0144 Eval=0.0761
+  Saved Best: 0.0761
+Split 1 Ep 73: Train=0.0141 Eval=0.0763
+Split 1 Ep 74: Train=0.0138 Eval=0.0762
+Split 1 Ep 75: Train=0.0135 Eval=0.0763
+Split 1 Ep 76: Train=0.0132 Eval=0.0763
+Split 1 Ep 77: Train=0.0129 Eval=0.0761
+  Saved Best: 0.0761
+Split 1 Ep 78: Train=0.0127 Eval=0.0763
+Split 1 Ep 79: Train=0.0124 Eval=0.0763
+Split 1 Ep 80: Train=0.0122 Eval=0.0762
+Split 1 Ep 81: Train=0.0119 Eval=0.0762
+Split 1 Ep 82: Train=0.0117 Eval=0.0761
+Split 1 Ep 83: Train=0.0115 Eval=0.0759
+  Saved Best: 0.0759
+Split 1 Ep 84: Train=0.0113 Eval=0.0761
+Split 1 Ep 85: Train=0.0111 Eval=0.0761
+Split 1 Ep 86: Train=0.0108 Eval=0.0761
+Split 1 Ep 87: Train=0.0108 Eval=0.0760
+Split 1 Ep 88: Train=0.0106 Eval=0.0761
+Split 1 Ep 89: Train=0.0105 Eval=0.0761
+Split 1 Ep 90: Train=0.0103 Eval=0.0760
+Split 1 Ep 91: Train=0.0103 Eval=0.0760
+Split 1 Ep 92: Train=0.0101 Eval=0.0761
+Split 1 Ep 93: Train=0.0100 Eval=0.0761
+Split 1 Ep 94: Train=0.0100 Eval=0.0761
+Split 1 Ep 95: Train=0.0099 Eval=0.0761
+Split 1 Ep 96: Train=0.0099 Eval=0.0761
+Split 1 Ep 97: Train=0.0098 Eval=0.0761
+Split 1 Ep 98: Train=0.0098 Eval=0.0761
+Split 1 Ep 99: Train=0.0098 Eval=0.0761
+Split 1 Ep 100: Train=0.0098 Eval=0.0761
+
+--- Split 2 ---
+Split 2 Ep 1: Train=0.1830 Eval=0.1479
+  Saved Best: 0.1479
+Split 2 Ep 2: Train=0.1365 Eval=0.1318
+  Saved Best: 0.1318
+Split 2 Ep 3: Train=0.1237 Eval=0.1220
+  Saved Best: 0.1220
+Split 2 Ep 4: Train=0.1146 Eval=0.1152
+  Saved Best: 0.1152
+Split 2 Ep 5: Train=0.1077 Eval=0.1101
+  Saved Best: 0.1101
+Split 2 Ep 6: Train=0.1027 Eval=0.1059
+  Saved Best: 0.1059
+Split 2 Ep 7: Train=0.0978 Eval=0.1020
+  Saved Best: 0.1020
+Split 2 Ep 8: Train=0.0939 Eval=0.0997
+  Saved Best: 0.0997
+Split 2 Ep 9: Train=0.0905 Eval=0.0983
+  Saved Best: 0.0983
+Split 2 Ep 10: Train=0.0875 Eval=0.0950
+  Saved Best: 0.0950
+Split 2 Ep 11: Train=0.0846 Eval=0.0934
+  Saved Best: 0.0934
+Split 2 Ep 12: Train=0.0814 Eval=0.0917
+  Saved Best: 0.0917
+Split 2 Ep 13: Train=0.0781 Eval=0.0912
+  Saved Best: 0.0912
+Split 2 Ep 14: Train=0.0756 Eval=0.0906
+  Saved Best: 0.0906
+Split 2 Ep 15: Train=0.0737 Eval=0.0911
+Split 2 Ep 16: Train=0.0713 Eval=0.0888
+  Saved Best: 0.0888
+Split 2 Ep 17: Train=0.0684 Eval=0.0884
+  Saved Best: 0.0884
+Split 2 Ep 18: Train=0.0659 Eval=0.0891
+Split 2 Ep 19: Train=0.0641 Eval=0.0877
+  Saved Best: 0.0877
+Split 2 Ep 20: Train=0.0615 Eval=0.0869
+  Saved Best: 0.0869
+Split 2 Ep 21: Train=0.0597 Eval=0.0879
+Split 2 Ep 22: Train=0.0577 Eval=0.0869
+Split 2 Ep 23: Train=0.0549 Eval=0.0865
+  Saved Best: 0.0865
+Split 2 Ep 24: Train=0.0537 Eval=0.0882
+Split 2 Ep 25: Train=0.0516 Eval=0.0857
+  Saved Best: 0.0857
+Split 2 Ep 26: Train=0.0500 Eval=0.0844
+  Saved Best: 0.0844
+Split 2 Ep 27: Train=0.0477 Eval=0.0849
+Split 2 Ep 28: Train=0.0463 Eval=0.0851
+Split 2 Ep 29: Train=0.0446 Eval=0.0854
+Split 2 Ep 30: Train=0.0431 Eval=0.0834
+  Saved Best: 0.0834
+Split 2 Ep 31: Train=0.0412 Eval=0.0841
+Split 2 Ep 32: Train=0.0397 Eval=0.0835
+Split 2 Ep 33: Train=0.0386 Eval=0.0836
+Split 2 Ep 34: Train=0.0373 Eval=0.0823
+  Saved Best: 0.0823
+Split 2 Ep 35: Train=0.0361 Eval=0.0818
+  Saved Best: 0.0818
+Split 2 Ep 36: Train=0.0346 Eval=0.0819
+Split 2 Ep 37: Train=0.0345 Eval=0.0824
+Split 2 Ep 38: Train=0.0331 Eval=0.0812
+  Saved Best: 0.0812
+Split 2 Ep 39: Train=0.0323 Eval=0.0813
+Split 2 Ep 40: Train=0.0311 Eval=0.0808
+  Saved Best: 0.0808
+Split 2 Ep 41: Train=0.0306 Eval=0.0798
+  Saved Best: 0.0798
+Split 2 Ep 42: Train=0.0296 Eval=0.0802
+Split 2 Ep 43: Train=0.0289 Eval=0.0800
+Split 2 Ep 44: Train=0.0283 Eval=0.0797
+  Saved Best: 0.0797
+Split 2 Ep 45: Train=0.0275 Eval=0.0795
+  Saved Best: 0.0795
+Split 2 Ep 46: Train=0.0269 Eval=0.0796
+Split 2 Ep 47: Train=0.0266 Eval=0.0791
+  Saved Best: 0.0791
+Split 2 Ep 48: Train=0.0259 Eval=0.0796
+Split 2 Ep 49: Train=0.0254 Eval=0.0784
+  Saved Best: 0.0784
+Split 2 Ep 50: Train=0.0246 Eval=0.0793
+Split 2 Ep 51: Train=0.0239 Eval=0.0786
+Split 2 Ep 52: Train=0.0233 Eval=0.0779
+  Saved Best: 0.0779
+Split 2 Ep 53: Train=0.0230 Eval=0.0780
+Split 2 Ep 54: Train=0.0225 Eval=0.0787
+Split 2 Ep 55: Train=0.0217 Eval=0.0778
+  Saved Best: 0.0778
+Split 2 Ep 56: Train=0.0213 Eval=0.0778
+  Saved Best: 0.0778
+Split 2 Ep 57: Train=0.0208 Eval=0.0780
+Split 2 Ep 58: Train=0.0202 Eval=0.0777
+  Saved Best: 0.0777
+Split 2 Ep 59: Train=0.0200 Eval=0.0776
+  Saved Best: 0.0776
+Split 2 Ep 60: Train=0.0194 Eval=0.0776
+Split 2 Ep 61: Train=0.0191 Eval=0.0770
+  Saved Best: 0.0770
+Split 2 Ep 62: Train=0.0188 Eval=0.0771
+Split 2 Ep 63: Train=0.0182 Eval=0.0770
+  Saved Best: 0.0770
+Split 2 Ep 64: Train=0.0177 Eval=0.0770
+Split 2 Ep 65: Train=0.0175 Eval=0.0766
+  Saved Best: 0.0766
+Split 2 Ep 66: Train=0.0169 Eval=0.0768
+Split 2 Ep 67: Train=0.0165 Eval=0.0768
+Split 2 Ep 68: Train=0.0162 Eval=0.0769
+Split 2 Ep 69: Train=0.0158 Eval=0.0766
+Split 2 Ep 70: Train=0.0155 Eval=0.0770
+Split 2 Ep 71: Train=0.0151 Eval=0.0765
+  Saved Best: 0.0765
+Split 2 Ep 72: Train=0.0148 Eval=0.0768
+Split 2 Ep 73: Train=0.0145 Eval=0.0768
+Split 2 Ep 74: Train=0.0142 Eval=0.0766
+Split 2 Ep 75: Train=0.0139 Eval=0.0767
+Split 2 Ep 76: Train=0.0136 Eval=0.0766
+Split 2 Ep 77: Train=0.0133 Eval=0.0766
+Split 2 Ep 78: Train=0.0130 Eval=0.0763
+  Saved Best: 0.0763
+Split 2 Ep 79: Train=0.0127 Eval=0.0765
+Split 2 Ep 80: Train=0.0125 Eval=0.0765
+Split 2 Ep 81: Train=0.0122 Eval=0.0764
+Split 2 Ep 82: Train=0.0120 Eval=0.0762
+  Saved Best: 0.0762
+Split 2 Ep 83: Train=0.0118 Eval=0.0762
+Split 2 Ep 84: Train=0.0116 Eval=0.0765
+Split 2 Ep 85: Train=0.0114 Eval=0.0764
+Split 2 Ep 86: Train=0.0112 Eval=0.0764
+Split 2 Ep 87: Train=0.0110 Eval=0.0764
+Split 2 Ep 88: Train=0.0109 Eval=0.0764
+Split 2 Ep 89: Train=0.0108 Eval=0.0763
+Split 2 Ep 90: Train=0.0107 Eval=0.0765
+Split 2 Ep 91: Train=0.0105 Eval=0.0765
+Split 2 Ep 92: Train=0.0104 Eval=0.0764
+Split 2 Ep 93: Train=0.0104 Eval=0.0763
+Split 2 Ep 94: Train=0.0103 Eval=0.0764
+Split 2 Ep 95: Train=0.0102 Eval=0.0764
+Split 2 Ep 96: Train=0.0102 Eval=0.0764
+Split 2 Ep 97: Train=0.0102 Eval=0.0763
+Split 2 Ep 98: Train=0.0102 Eval=0.0764
+Split 2 Ep 99: Train=0.0102 Eval=0.0764
+Split 2 Ep 100: Train=0.0101 Eval=0.0764
+
+--- Split 3 ---
+Split 3 Ep 1: Train=0.1819 Eval=0.1535
+  Saved Best: 0.1535
+Split 3 Ep 2: Train=0.1361 Eval=0.1321
+  Saved Best: 0.1321
+Split 3 Ep 3: Train=0.1220 Eval=0.1217
+  Saved Best: 0.1217
+Split 3 Ep 4: Train=0.1127 Eval=0.1152
+  Saved Best: 0.1152
+Split 3 Ep 5: Train=0.1063 Eval=0.1097
+  Saved Best: 0.1097
+Split 3 Ep 6: Train=0.1006 Eval=0.1063
+  Saved Best: 0.1063
+Split 3 Ep 7: Train=0.0965 Eval=0.1029
+  Saved Best: 0.1029
+Split 3 Ep 8: Train=0.0927 Eval=0.0997
+  Saved Best: 0.0997
+Split 3 Ep 9: Train=0.0892 Eval=0.0969
+  Saved Best: 0.0969
+Split 3 Ep 10: Train=0.0858 Eval=0.0948
+  Saved Best: 0.0948
+Split 3 Ep 11: Train=0.0828 Eval=0.0942
+  Saved Best: 0.0942
+Split 3 Ep 12: Train=0.0808 Eval=0.0923
+  Saved Best: 0.0923
+Split 3 Ep 13: Train=0.0771 Eval=0.0915
+  Saved Best: 0.0915
+Split 3 Ep 14: Train=0.0751 Eval=0.0907
+  Saved Best: 0.0907
+Split 3 Ep 15: Train=0.0727 Eval=0.0906
+  Saved Best: 0.0906
+Split 3 Ep 16: Train=0.0699 Eval=0.0898
+  Saved Best: 0.0898
+Split 3 Ep 17: Train=0.0682 Eval=0.0886
+  Saved Best: 0.0886
+Split 3 Ep 18: Train=0.0656 Eval=0.0886
+Split 3 Ep 19: Train=0.0634 Eval=0.0880
+  Saved Best: 0.0880
+Split 3 Ep 20: Train=0.0616 Eval=0.0896
+Split 3 Ep 21: Train=0.0590 Eval=0.0876
+  Saved Best: 0.0876
+Split 3 Ep 22: Train=0.0572 Eval=0.0872
+  Saved Best: 0.0872
+Split 3 Ep 23: Train=0.0551 Eval=0.0864
+  Saved Best: 0.0864
+Split 3 Ep 24: Train=0.0537 Eval=0.0870
+Split 3 Ep 25: Train=0.0515 Eval=0.0858
+  Saved Best: 0.0858
+Split 3 Ep 26: Train=0.0490 Eval=0.0855
+  Saved Best: 0.0855
+Split 3 Ep 27: Train=0.0485 Eval=0.0861
+Split 3 Ep 28: Train=0.0465 Eval=0.0848
+  Saved Best: 0.0848
+Split 3 Ep 29: Train=0.0445 Eval=0.0837
+  Saved Best: 0.0837
+Split 3 Ep 30: Train=0.0427 Eval=0.0840
+Split 3 Ep 31: Train=0.0417 Eval=0.0840
+Split 3 Ep 32: Train=0.0401 Eval=0.0829
+  Saved Best: 0.0829
+Split 3 Ep 33: Train=0.0386 Eval=0.0831
+Split 3 Ep 34: Train=0.0370 Eval=0.0830
+Split 3 Ep 35: Train=0.0361 Eval=0.0819
+  Saved Best: 0.0819
+Split 3 Ep 36: Train=0.0350 Eval=0.0823
+Split 3 Ep 37: Train=0.0342 Eval=0.0821
+Split 3 Ep 38: Train=0.0331 Eval=0.0816
+  Saved Best: 0.0816
+Split 3 Ep 39: Train=0.0323 Eval=0.0816
+  Saved Best: 0.0816
+Split 3 Ep 40: Train=0.0315 Eval=0.0818
+Split 3 Ep 41: Train=0.0305 Eval=0.0812
+  Saved Best: 0.0812
+Split 3 Ep 42: Train=0.0301 Eval=0.0804
+  Saved Best: 0.0804
+Split 3 Ep 43: Train=0.0293 Eval=0.0798
+  Saved Best: 0.0798
+Split 3 Ep 44: Train=0.0284 Eval=0.0802
+Split 3 Ep 45: Train=0.0277 Eval=0.0799
+Split 3 Ep 46: Train=0.0268 Eval=0.0804
+Split 3 Ep 47: Train=0.0263 Eval=0.0794
+  Saved Best: 0.0794
+Split 3 Ep 48: Train=0.0258 Eval=0.0795
+Split 3 Ep 49: Train=0.0251 Eval=0.0793
+  Saved Best: 0.0793
+Split 3 Ep 50: Train=0.0248 Eval=0.0794
+Split 3 Ep 51: Train=0.0242 Eval=0.0792
+  Saved Best: 0.0792
+Split 3 Ep 52: Train=0.0236 Eval=0.0792
+Split 3 Ep 53: Train=0.0232 Eval=0.0785
+  Saved Best: 0.0785
+Split 3 Ep 54: Train=0.0227 Eval=0.0783
+  Saved Best: 0.0783
+Split 3 Ep 55: Train=0.0222 Eval=0.0787
+Split 3 Ep 56: Train=0.0217 Eval=0.0783
+Split 3 Ep 57: Train=0.0212 Eval=0.0782
+  Saved Best: 0.0782
+Split 3 Ep 58: Train=0.0206 Eval=0.0778
+  Saved Best: 0.0778
+Split 3 Ep 59: Train=0.0202 Eval=0.0784
+Split 3 Ep 60: Train=0.0198 Eval=0.0783
+Split 3 Ep 61: Train=0.0194 Eval=0.0780
+Split 3 Ep 62: Train=0.0189 Eval=0.0775
+  Saved Best: 0.0775
+Split 3 Ep 63: Train=0.0185 Eval=0.0776
+Split 3 Ep 64: Train=0.0180 Eval=0.0776
+Split 3 Ep 65: Train=0.0176 Eval=0.0772
+  Saved Best: 0.0772
+Split 3 Ep 66: Train=0.0173 Eval=0.0773
+Split 3 Ep 67: Train=0.0170 Eval=0.0771
+  Saved Best: 0.0771
+Split 3 Ep 68: Train=0.0165 Eval=0.0772
+Split 3 Ep 69: Train=0.0160 Eval=0.0772
+Split 3 Ep 70: Train=0.0157 Eval=0.0769
+  Saved Best: 0.0769
+Split 3 Ep 71: Train=0.0154 Eval=0.0774
+Split 3 Ep 72: Train=0.0150 Eval=0.0774
+Split 3 Ep 73: Train=0.0147 Eval=0.0769
+Split 3 Ep 74: Train=0.0144 Eval=0.0769
+Split 3 Ep 75: Train=0.0141 Eval=0.0770
+Split 3 Ep 76: Train=0.0138 Eval=0.0769
+Split 3 Ep 77: Train=0.0135 Eval=0.0771
+Split 3 Ep 78: Train=0.0131 Eval=0.0770
+Split 3 Ep 79: Train=0.0129 Eval=0.0768
+  Saved Best: 0.0768
+Split 3 Ep 80: Train=0.0127 Eval=0.0767
+  Saved Best: 0.0767
+Split 3 Ep 81: Train=0.0124 Eval=0.0768
+Split 3 Ep 82: Train=0.0122 Eval=0.0769
+Split 3 Ep 83: Train=0.0119 Eval=0.0767
+Split 3 Ep 84: Train=0.0117 Eval=0.0768
+Split 3 Ep 85: Train=0.0116 Eval=0.0768
+Split 3 Ep 86: Train=0.0114 Eval=0.0770
+Split 3 Ep 87: Train=0.0112 Eval=0.0770
+Split 3 Ep 88: Train=0.0110 Eval=0.0769
+Split 3 Ep 89: Train=0.0108 Eval=0.0768
+Split 3 Ep 90: Train=0.0107 Eval=0.0769
+Split 3 Ep 91: Train=0.0106 Eval=0.0769
+Split 3 Ep 92: Train=0.0106 Eval=0.0769
+Split 3 Ep 93: Train=0.0104 Eval=0.0768
+Split 3 Ep 94: Train=0.0104 Eval=0.0768
+Split 3 Ep 95: Train=0.0103 Eval=0.0768
+Split 3 Ep 96: Train=0.0103 Eval=0.0769
+Split 3 Ep 97: Train=0.0103 Eval=0.0769
+Split 3 Ep 98: Train=0.0103 Eval=0.0769
+Split 3 Ep 99: Train=0.0102 Eval=0.0769
+Split 3 Ep 100: Train=0.0102 Eval=0.0769
+
+--- Split 4 ---
+Split 4 Ep 1: Train=0.1755 Eval=0.1468
+  Saved Best: 0.1468
+Split 4 Ep 2: Train=0.1343 Eval=0.1321
+  Saved Best: 0.1321
+Split 4 Ep 3: Train=0.1221 Eval=0.1230
+  Saved Best: 0.1230
+Split 4 Ep 4: Train=0.1134 Eval=0.1158
+  Saved Best: 0.1158
+Split 4 Ep 5: Train=0.1063 Eval=0.1105
+  Saved Best: 0.1105
+Split 4 Ep 6: Train=0.1015 Eval=0.1072
+  Saved Best: 0.1072
+Split 4 Ep 7: Train=0.0971 Eval=0.1032
+  Saved Best: 0.1032
+Split 4 Ep 8: Train=0.0929 Eval=0.1006
+  Saved Best: 0.1006
+Split 4 Ep 9: Train=0.0899 Eval=0.0980
+  Saved Best: 0.0980
+Split 4 Ep 10: Train=0.0864 Eval=0.0980
+  Saved Best: 0.0980
+Split 4 Ep 11: Train=0.0839 Eval=0.0954
+  Saved Best: 0.0954
+Split 4 Ep 12: Train=0.0804 Eval=0.0932
+  Saved Best: 0.0932
+Split 4 Ep 13: Train=0.0779 Eval=0.0937
+Split 4 Ep 14: Train=0.0754 Eval=0.0931
+  Saved Best: 0.0931
+Split 4 Ep 15: Train=0.0731 Eval=0.0911
+  Saved Best: 0.0911
+Split 4 Ep 16: Train=0.0703 Eval=0.0892
+  Saved Best: 0.0892
+Split 4 Ep 17: Train=0.0684 Eval=0.0898
+Split 4 Ep 18: Train=0.0656 Eval=0.0892
+Split 4 Ep 19: Train=0.0631 Eval=0.0876
+  Saved Best: 0.0876
+Split 4 Ep 20: Train=0.0615 Eval=0.0873
+  Saved Best: 0.0873
+Split 4 Ep 21: Train=0.0589 Eval=0.0876
+Split 4 Ep 22: Train=0.0574 Eval=0.0872
+  Saved Best: 0.0872
+Split 4 Ep 23: Train=0.0557 Eval=0.0883
+Split 4 Ep 24: Train=0.0537 Eval=0.0889
+Split 4 Ep 25: Train=0.0520 Eval=0.0865
+  Saved Best: 0.0865
+Split 4 Ep 26: Train=0.0500 Eval=0.0852
+  Saved Best: 0.0852
+Split 4 Ep 27: Train=0.0479 Eval=0.0854
+Split 4 Ep 28: Train=0.0463 Eval=0.0834
+  Saved Best: 0.0834
+Split 4 Ep 29: Train=0.0444 Eval=0.0856
+Split 4 Ep 30: Train=0.0434 Eval=0.0844
+Split 4 Ep 31: Train=0.0416 Eval=0.0834
+Split 4 Ep 32: Train=0.0397 Eval=0.0848
+Split 4 Ep 33: Train=0.0388 Eval=0.0832
+  Saved Best: 0.0832
+Split 4 Ep 34: Train=0.0375 Eval=0.0832
+Split 4 Ep 35: Train=0.0362 Eval=0.0839
+Split 4 Ep 36: Train=0.0353 Eval=0.0819
+  Saved Best: 0.0819
+Split 4 Ep 37: Train=0.0344 Eval=0.0826
+Split 4 Ep 38: Train=0.0333 Eval=0.0811
+  Saved Best: 0.0811
+Split 4 Ep 39: Train=0.0321 Eval=0.0814
+Split 4 Ep 40: Train=0.0312 Eval=0.0808
+  Saved Best: 0.0808
+Split 4 Ep 41: Train=0.0304 Eval=0.0811
+Split 4 Ep 42: Train=0.0300 Eval=0.0801
+  Saved Best: 0.0801
+Split 4 Ep 43: Train=0.0290 Eval=0.0802
+Split 4 Ep 44: Train=0.0281 Eval=0.0807
+Split 4 Ep 45: Train=0.0274 Eval=0.0800
+  Saved Best: 0.0800
+Split 4 Ep 46: Train=0.0269 Eval=0.0805
+Split 4 Ep 47: Train=0.0262 Eval=0.0796
+  Saved Best: 0.0796
+Split 4 Ep 48: Train=0.0257 Eval=0.0797
+Split 4 Ep 49: Train=0.0249 Eval=0.0794
+  Saved Best: 0.0794
+Split 4 Ep 50: Train=0.0246 Eval=0.0792
+  Saved Best: 0.0792
+Split 4 Ep 51: Train=0.0236 Eval=0.0788
+  Saved Best: 0.0788
+Split 4 Ep 52: Train=0.0232 Eval=0.0787
+  Saved Best: 0.0787
+Split 4 Ep 53: Train=0.0228 Eval=0.0786
+  Saved Best: 0.0786
+Split 4 Ep 54: Train=0.0224 Eval=0.0785
+  Saved Best: 0.0785
+Split 4 Ep 55: Train=0.0221 Eval=0.0782
+  Saved Best: 0.0782
+Split 4 Ep 56: Train=0.0213 Eval=0.0780
+  Saved Best: 0.0780
+Split 4 Ep 57: Train=0.0205 Eval=0.0778
+  Saved Best: 0.0778
+Split 4 Ep 58: Train=0.0203 Eval=0.0781
+Split 4 Ep 59: Train=0.0196 Eval=0.0782
+Split 4 Ep 60: Train=0.0194 Eval=0.0778
+  Saved Best: 0.0778
+Split 4 Ep 61: Train=0.0189 Eval=0.0780
+Split 4 Ep 62: Train=0.0185 Eval=0.0779
+Split 4 Ep 63: Train=0.0180 Eval=0.0777
+  Saved Best: 0.0777
+Split 4 Ep 64: Train=0.0176 Eval=0.0774
+  Saved Best: 0.0774
+Split 4 Ep 65: Train=0.0173 Eval=0.0774
+Split 4 Ep 66: Train=0.0169 Eval=0.0772
+  Saved Best: 0.0772
+Split 4 Ep 67: Train=0.0164 Eval=0.0775
+Split 4 Ep 68: Train=0.0161 Eval=0.0773
+Split 4 Ep 69: Train=0.0158 Eval=0.0770
+  Saved Best: 0.0770
+Split 4 Ep 70: Train=0.0155 Eval=0.0771
+Split 4 Ep 71: Train=0.0150 Eval=0.0772
+Split 4 Ep 72: Train=0.0147 Eval=0.0772
+Split 4 Ep 73: Train=0.0143 Eval=0.0769
+  Saved Best: 0.0769
+Split 4 Ep 74: Train=0.0140 Eval=0.0770
+Split 4 Ep 75: Train=0.0137 Eval=0.0773
+Split 4 Ep 76: Train=0.0134 Eval=0.0771
+Split 4 Ep 77: Train=0.0131 Eval=0.0769
+Split 4 Ep 78: Train=0.0129 Eval=0.0770
+Split 4 Ep 79: Train=0.0127 Eval=0.0770
+Split 4 Ep 80: Train=0.0123 Eval=0.0768
+  Saved Best: 0.0768
+Split 4 Ep 81: Train=0.0122 Eval=0.0771
+Split 4 Ep 82: Train=0.0119 Eval=0.0768
+  Saved Best: 0.0768
+Split 4 Ep 83: Train=0.0117 Eval=0.0768
+  Saved Best: 0.0768
+Split 4 Ep 84: Train=0.0115 Eval=0.0770
+Split 4 Ep 85: Train=0.0113 Eval=0.0768
+Split 4 Ep 86: Train=0.0112 Eval=0.0770
+Split 4 Ep 87: Train=0.0110 Eval=0.0769
+Split 4 Ep 88: Train=0.0108 Eval=0.0768
+Split 4 Ep 89: Train=0.0107 Eval=0.0769
+Split 4 Ep 90: Train=0.0105 Eval=0.0768
+Split 4 Ep 91: Train=0.0104 Eval=0.0769
+Split 4 Ep 92: Train=0.0103 Eval=0.0769
+Split 4 Ep 93: Train=0.0102 Eval=0.0769
+Split 4 Ep 94: Train=0.0102 Eval=0.0769
+Split 4 Ep 95: Train=0.0101 Eval=0.0769
+Split 4 Ep 96: Train=0.0101 Eval=0.0769
+Split 4 Ep 97: Train=0.0101 Eval=0.0769
+Split 4 Ep 98: Train=0.0101 Eval=0.0769
+Split 4 Ep 99: Train=0.0100 Eval=0.0769
+Split 4 Ep 100: Train=0.0100 Eval=0.0769

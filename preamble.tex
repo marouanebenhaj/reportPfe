@@ -1,0 +1,168 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Preamble of the project    %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% This file contains the preamble of the project, which includes various packages and settings to customize the document layout, formatting, and styling.
+
+% Make sure to include necessary packages for mathematical symbols, graphics, page layout,
+% captions, section headings, lists, hyperlinks, tables, bibliography, and other functionalities.
+%
+% Remember to update the bibliography file, and include any abbreviations or acronyms needed for your project.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+% Packages
+\usepackage{amssymb} % For mathematical symbols
+\usepackage{graphicx} % For including graphics in the document
+\usepackage{geometry} % For customizing page layout and margins
+\usepackage{titling} % For customizing the title
+\usepackage{caption} % For customizing captions
+\usepackage{subcaption} % For subcaptions
+\usepackage{array} % For customizing table column formatting
+\usepackage{hyperref} % For creating hyperlinks within the document
+\usepackage{titlesec} % For customizing section headings
+\usepackage{enumitem} % For customizing enumerated and itemized lists
+\usepackage{float} % For customizing floating objects like figures and tables
+\usepackage{tikz} % For creating graphics and diagrams
+\usepackage{changepage} % For making changes to page layout within the document
+\usepackage{indentfirst} % For indenting the first paragraph after section headings
+\usepackage{xcolor} % For customizing text and background colors
+\usepackage[nottoc]{tocbibind} % For including lists in the table of contents
+\usepackage{acronym} % For creating a list of abbreviations
+\usepackage{setspace} % For adjusting spacing
+\usepackage{fontspec} % For customizing font
+\usepackage{fancyhdr} % For customizing page headers and footers
+\usepackage{ragged2e} % For text alignment
+\usepackage[style=ieee]{biblatex} % For IEEE referencing style
+\usepackage{tikz}
+\usetikzlibrary{positioning, shapes, arrows, positioning,arrows.meta,calc}
+\usepackage[ruled,vlined,linesnumbered]{algorithm2e}
+\SetKwInput{KwInput}{Input}
+\SetKwInput{KwOutput}{Output}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows.meta, positioning}
+\usepackage{adjustbox}
+
+
+% Spacing
+\setstretch{1.5}
+
+% Font
+\setmainfont{CenturyGothic.ttf}[
+    BoldFont=CenturyGothicbold.ttf,
+    BoldItalicFont=CGOTHICBI.ttf,
+    ItalicFont=gothici.ttf
+]
+
+% Titling
+\titleformat*{\section}{\fontsize{16pt}{19.2pt}\bfseries\headingfont\MakeUppercase}
+\titleformat*{\subsection}{\fontsize{13pt}{15.6pt}\bfseries\headingfont}
+\titleformat*{\subsubsection}{\fontsize{13pt}{15.6pt}\bfseries\headingfont}
+
+% Subsubsubsection Command
+\newcommand{\subsubsubsection}[1]{%
+  %\par\addvspace{3.25ex plus 1ex minus .2ex}%
+  {\normalfont\fontsize{12pt}{14pt}\selectfont\bfseries\itshape #1}%
+  \par\addvspace{1.5ex plus .2ex}%
+}
+
+% Subsubsubsubsection Command
+\newcommand{\subsubsubsubsection}[1]{%
+  \par\addvspace{3.25ex plus 1ex minus .2ex}%
+  {\normalfont\fontsize{10pt}{12pt}\selectfont\bfseries\itshape #1}%
+  \par\addvspace{1.5ex plus .2ex}%
+}
+
+% Adjust spacing options
+\titlespacing*{\section}{0pt}{2\baselineskip}{0.5\baselineskip}
+\titlespacing*{\subsection}{0pt}{1\baselineskip}{0.5\baselineskip}
+\titlespacing*{\subsubsection}{0pt}{1\baselineskip}{0.5\baselineskip}
+\titlespacing*{\subsubsubsection}{0pt}{1\baselineskip}{0.5\baselineskip}
+\titlespacing*{\subsubsubsubsection}{0pt}{1\baselineskip}{0.5\baselineskip}
+
+% Format \section
+\titleformat{\section}
+{\fontsize{16pt}{19pt}\selectfont\bfseries\MakeUppercase}
+{\thesection}
+{0.5em}
+{}
+
+% Format \subsection
+\titleformat{\subsection}
+{\fontsize{13pt}{15.6pt}\selectfont\bfseries}
+{\thesubsection}
+{0.5em}
+{}
+
+% Format \subsubsection
+\titleformat{\subsubsection}
+{\fontsize{13pt}{15.6pt}\selectfont\bfseries}
+{\thesubsubsection}
+{0.5em}
+{}
+
+% Format \subsubsubsection
+\titleformat{\subsubsubsection}
+{\fontsize{12pt}{14pt}\selectfont\bfseries\itshape}
+{}
+{0em}
+{}
+
+% Format \subsubsubsubsection
+\titleformat{\subsubsubsubsection}
+{\fontsize{10pt}{12pt}\selectfont\bfseries\itshape}
+{}
+{0em}
+{}
+
+% Margins
+\geometry{margin=2.5cm}
+
+% Justification
+\justifying
+
+% Pagination
+\pagestyle{fancy}
+\fancyhf{}
+\rfoot{\thepage}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+
+% Set paragraph indentation
+\setlength{\parindent}{1.27cm}
+
+% Customize caption format for figures and tables
+\captionsetup{skip=0pt}
+
+% Change the title of the table of contents
+\renewcommand{\contentsname}{Table of Contents}
+
+% Bibliography
+\addbibresource{references.bib}
+
+\usepackage{graphicx}
+\usepackage{caption} % Required for customizing the captions
+
+\DeclareCaptionLabelFormat{bold}{\textbf{#1 #2}} % Define a bold caption label format
+\captionsetup[figure]{labelformat=bold} % Apply the bold format to figure captions
+\usepackage{tocloft} % Required for customizing the table of contents and lists of figures/tables
+
+% Redefine the format for figure entries in the List of Figures
+\renewcommand{\cftfigpresnum}{\bfseries\figurename\enspace}
+\renewcommand{\cftfigaftersnum}{\bfseries:}
+
+% Set the width of the figure number to accommodate "Figure 10:" properly
+\usepackage{tocloft}
+\usepackage{calc} % for \widthof
+\usepackage{amsmath}
+\usepackage{multirow}
+% make only the label bold, not the caption text
+\renewcommand{\cftfigpresnum}{\textbf{Figure~}}
+\renewcommand{\cftfigaftersnum}{\textbf{:}\space}
+
+% set the number column wide enough (adjust 99 if you have more than 99 figures)
+\setlength{\cftfignumwidth}{\widthof{\textbf{Figure~99: }}}
+
+
+
+

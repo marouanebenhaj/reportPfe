@@ -1,0 +1,51 @@
+Test Results for Model: ast-small-v2-nopitch
+==========================================
+Device: cuda
+Checkpoints: C:\Users\internal.research\Desktop\MarouaneBenHajHassineCapstone\SynthInv\synthInvV2\checkpoints\ast-small-v2-nopitch
+
+Testing Split 0...
+ -> MAE: 0.0726
+    Running MSS (N=150)...
+
+Testing Split 1...
+ -> MAE: 0.0725
+    Running MSS (N=150)...
+
+Testing Split 2...
+ -> MAE: 0.0723
+    Running MSS (N=150)...
+
+Testing Split 3...
+ -> MAE: 0.0732
+    Running MSS (N=150)...
+
+Testing Split 4...
+ -> MAE: 0.0729
+    Running MSS (N=150)...
+
+==========================================
+   RESULTS: ast-small-v2-nopitch
+==========================================
+Average Test MAE: 0.0727 ± 0.0003
+Best Split: 2 (0.0723)
+
+Detailed Breakdown (Best Split):
+ oscillator_1_wave_frame            : 0.1327
+ oscillator_1_level                 : 0.1062
+ oscillator_1_unison_voices         : 0.1247
+ oscillator_1_unison_detune         : 0.0943
+ oscillator_2_wave_frame            : 0.1554
+ oscillator_2_level                 : 0.1144
+ oscillator_2_transpose             : 0.0870
+ envelope_1_attack                  : 0.0160
+ envelope_1_decay                   : 0.0131
+ envelope_2_attack                  : 0.0327
+ envelope_2_decay                   : 0.0268
+ filter_1_cutoff                    : 0.0397
+ filter_1_resonance                 : 0.0707
+ sample_level                       : 0.0624
+ modulation_1_amount                : 0.0361
+ reverb_mix                         : 0.0453
+MSS evaluation failed (Vital unavailable or no valid samples).
+
+Results saved to: C:\Users\internal.research\Desktop\MarouaneBenHajHassineCapstone\SynthInv\synthInvV2\checkpoints\ast-small-v2-nopitch\test_results.txt

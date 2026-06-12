@@ -1,0 +1,522 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Iterations                    %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{ITERATIONS}
+
+\noindent
+The development of the synthesizer parameter estimation system followed a systematic iteration-based process guided by the Design Science Research framework introduced in Section~\ref{sec:methodology}. Three successive iterations — V1, V2, and V3 — were conducted, each corresponding to a complete DSR cycle in which a version of the artifact was designed, implemented, and evaluated, with empirical findings feeding directly into the design of the subsequent iteration. Each iteration introduces a distinct set of architectural or data-regime improvements motivated by the limitations uncovered in the preceding cycle.
+
+% ═══════════════════════════════════════════════════════════
+\subsection{Iteration 1: Baseline Architecture and Pitch Conditioning}
+
+\noindent
+The first iteration establishes a controlled baseline by training and comparing three backbone architecture families — a custom residual CNN, an Audio Spectrogram Transformer, and a ConvNeXt — across three pitch conditioning strategies, using a single-scale mel spectrogram as input. The goal is to determine which combination achieves the lowest mean absolute error on the Vital parameter estimation task and to identify which directions are most promising for subsequent architectural refinement.
+
+\subsubsection{Problem Investigation}
+
+\noindent
+Prior to this study, parameter estimation for the Vital wavetable synthesizer had not been addressed. Bruford et al.\ \cite{bruford2024ast} applied an AST to Massive, a modern wavetable synthesizer by Native Instruments, while InverSynth \cite{barkan2019inversynth} and Sound2Synth \cite{chen2022sound2synth} target FM and subtractive synthesizers respectively. Although Vital is a wavetable instrument, the 16-parameter subset studied here is deliberately structured to replicate a classic subtractive signal chain: two wavetable oscillators and one noise oscillator feed a low-pass filter whose cutoff is modulated by a dedicated filter envelope (Envelope 2) scaled by a modulation amount parameter; the resulting signal then passes through an amplitude envelope (Envelope 1) before a global reverb stage. Despite this subtractive signal-flow topology, the wavetable oscillators introduce a continuous, high-dimensional waveform space not present in conventional subtractive or FM instruments. It is therefore unknown whether the inductive biases of convolutional models, which capture local spectral patterns, outperform those of Transformer-based models, which model long-range dependencies across the full time-frequency plane, when the target synthesizer combines a structured analog signal chain with a wavetable oscillator stage.
+
+\noindent \newline
+A second open question concerns the role of explicit pitch conditioning. No prior work on synthesizer parameter estimation incorporates the MIDI pitch as a direct model input. Although the fundamental frequency of the rendered note is implicitly present in the mel spectrogram — manifesting as the position of the harmonic series along the frequency axis — it is unclear whether the model can reliably extract and exploit this information without guidance. Providing the normalised MIDI pitch as an explicit conditioning signal may yield more robust predictions across the pitch range, particularly for pitch-sensitive parameters such as oscillator transposition, where the correct prediction is directly related to the input pitch. It is additionally unclear whether a basic linear pitch projection is sufficient or whether a richer, multi-frequency sinusoidal encoding is needed to exploit pitch information effectively. This iteration therefore investigates the following questions:
+\begin{itemize}
+    \item Which backbone architecture — custom CNN, AST, or ConvNeXt — best captures wavetable timbral features from a single-scale mel spectrogram?
+    \item Does explicit pitch conditioning reduce parameter estimation error, and does a sinusoidal Fourier embedding outperform a basic MLP projection?
+\end{itemize}
+
+\subsubsection{Solution Design}
+
+\noindent
+The solution design for V1 consists of six model configurations arising from the combination of two backbone families (AST-small and ConvNeXt-tiny; the custom CNN baseline was included as a lightweight reference) with three pitch conditioning strategies. All configurations share the same input format — a single mid-scale mel spectrogram of shape $128 \times 224$ — and the same output layer — a Sigmoid-activated linear projection to 16 normalised parameters.
+
+\noindent \newline
+The three backbone families differ in their inductive bias and pre-training. The \textbf{SynthParamNet} (baseline CNN) is a custom residual network with a hybrid pooling strategy: the frequency axis is collapsed by global average pooling, and the resulting time sequence is reduced by concatenating a max-pool and an average-pool, yielding a $2C$-dimensional embedding that handles variable-length time axes without requiring zero-padding. The \textbf{AST-small} is a pre-trained Vision Transformer (ViT-small/16) \cite{dosovitskiy2021vit, gong2021ast} adapted to mono spectrogram input by retaining the first-channel slice of the RGB stem; the CLS token serves as the global representation. The \textbf{ConvNeXt-tiny} is a pre-trained convolutional backbone \cite{liu2022convnext} with ImageNet-22k weights, adapted to mono input in the same way and pooled with the same hybrid strategy as the baseline CNN.
+
+\noindent \newline
+For each backbone, three pitch conditioning variants are evaluated: \textbf{no-pitch}, in which the mel embedding feeds directly to the regression head; \textbf{basic MLP}, in which the normalised MIDI scalar $p \in [0,1]$ passes through a two-layer MLP and its output is concatenated with the mel embedding; and \textbf{sinusoidal embedding}, in which $p$ is first mapped to a 128-dimensional Fourier feature vector $\boldsymbol{\phi}(p)$ (Equation~\ref{eq:sinusoidal}) before the same MLP, providing a richer multi-frequency representation of the pitch scalar. Figure~\ref{fig:v1_design} illustrates the overall V1 design.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  font=\small,
+  node distance=0.55cm and 1.0cm,
+  bb/.style={rectangle, rounded corners=5pt, draw=gray!60, fill=blue!8,
+             minimum height=1.0cm, text width=2.6cm, align=center},
+  pc/.style={rectangle, rounded corners=5pt, draw=gray!60, fill=orange!10,
+             minimum height=1.0cm, text width=2.6cm, align=center},
+  fuse/.style={rectangle, rounded corners=5pt, draw=gray!60, fill=teal!10,
+               minimum height=1.0cm, text width=2.0cm, align=center},
+  outbox/.style={rectangle, rounded corners=5pt, draw=gray!60, fill=green!10,
+              minimum height=1.0cm, text width=2.2cm, align=center},
+  inp/.style={rectangle, rounded corners=5pt, draw=gray!60, fill=gray!8,
+              minimum height=1.0cm, text width=2.4cm, align=center},
+  arrow/.style={-{Stealth[length=3mm]}, thick, gray!60}
+]
+
+% Input
+\node[inp] (mel) at (0, 0) {Mel spec\\$128\!\times\!224$};
+\node[inp] (pitch) at (0, -2.2) {MIDI note\\$p \in [0,1]$};
+
+% Backbone options (stacked vertically)
+\node[bb] (cnn)   at (3.2,  0.9) {SynthParamNet\\(CNN)};
+\node[bb] (ast)   at (3.2,  0.0) {AST-small\\(ViT-S/16)};
+\node[bb] (cnxt)  at (3.2, -0.9) {ConvNeXt-tiny};
+
+% Pitch options (stacked)
+\node[pc] (nopitch) at (3.2, -1.9) {None};
+\node[pc] (mlp)     at (3.2, -2.8) {Basic MLP};
+\node[pc] (sin)     at (3.2, -3.7) {Sinusoidal\\+ MLP};
+
+% Fusion
+\node[fuse] (fuse) at (6.4, -1.4) {Concat\\fusion};
+
+% Head + Output
+\node[fuse] (head) at (8.4, -1.4) {Flat MLP\\head};
+\node[outbox]  (outp) at (10.4, -1.4) {$\hat{\mathbf{y}} \in [0,1]^{16}$};
+
+% Arrows: mel → backbones
+\draw[arrow] (mel.east) -- ++(0.5,0) |- (cnn.west);
+\draw[arrow] (mel.east) -- ++(0.5,0) |- (ast.west);
+\draw[arrow] (mel.east) -- ++(0.5,0) |- (cnxt.west);
+
+% Arrows: pitch → pitch modules
+\draw[arrow] (pitch.east) -- ++(0.5,0) |- (nopitch.west);
+\draw[arrow] (pitch.east) -- ++(0.5,0) |- (mlp.west);
+\draw[arrow] (pitch.east) -- ++(0.5,0) |- (sin.west);
+
+% Arrows: backbones → fusion
+\draw[arrow] (cnn.east)  -- ++(0.3,0) |- (fuse.west);
+\draw[arrow] (ast.east)  -- ++(0.3,0) |- (fuse.west);
+\draw[arrow] (cnxt.east) -- ++(0.3,0) |- (fuse.west);
+
+% Arrows: pitch modules → fusion
+\draw[arrow] (nopitch.east) -- ++(0.3,0) |- (fuse.west);
+\draw[arrow] (mlp.east)     -- ++(0.3,0) |- (fuse.west);
+\draw[arrow] (sin.east)     -- ++(0.3,0) |- (fuse.west);
+
+% Head → Output
+\draw[arrow] (fuse) -- (head);
+\draw[arrow] (head) -- (outp);
+
+% Brace labels
+\node[font=\scriptsize, text=gray!70] at (3.2, 1.55) {(choose one backbone)};
+\node[font=\scriptsize, text=gray!70] at (3.2, -4.35) {(choose one pitch mode)};
+
+\end{tikzpicture}
+\vspace{0.3cm}
+\caption{V1 design space: three backbone options combined with three pitch conditioning strategies, converging on a shared concatenation-based fusion and flat regression head.}
+\label{fig:v1_design}
+\end{figure}
+
+\noindent
+Both AST and ConvNeXt are initialised from ImageNet-22k pre-trained weights, with their first-layer convolution adapted from three-channel (RGB) to one-channel (mono spectrogram) input by retaining only the first channel's weight slice. The sinusoidal pitch embedding $\boldsymbol{\phi}(p)$ uses log-spaced frequencies (Equation~\ref{eq:sinusoidal}) to avoid float32 overflow and to provide the model with a dense, multi-scale encoding of the pitch scalar.
+
+\subsubsection{Design Validation}
+
+\noindent
+Before full-scale training, the following validation checks were performed to ensure the correctness of the V1 design:
+
+\begin{itemize}
+    \item \textbf{Architecture Compatibility:} Single-channel stem adaptation was verified for both AST and ConvNeXt by confirming that the adapted first layer produced activations of the correct spatial shape ($128 \times 224$ feature maps at the input resolution). For AST, the \texttt{dynamic\_img\_size=True} flag was confirmed to handle the non-square $128 \times 224$ input without positional embedding mismatch.
+
+    \item \textbf{Sinusoidal Embedding Numerical Safety:} The log-spaced frequencies $\omega_k = 2^k \pi$ were verified to remain within float32 range at $k = 63$ ($\omega_{63} = 2^{63}\pi \approx 2.9 \times 10^{19}$); because these values enter only as arguments to $\sin$ and $\cos$, no overflow occurs in the embedding vector.
+
+    \item \textbf{Baseline Calibration Against Prior Work:} The AST-small no-pitch configuration approximates the essential setup of Bruford et al.\ \cite{bruford2024ast} — a ViT encoder, single-scale mel spectrogram input, and no pitch conditioning — to provide a reference point against the primary baseline in the literature. The replication is intentionally partial: Bruford et al.\ use a Mean Squared Error (MSE) loss during training and scale their dataset to up to one million samples, both of which are beyond the scope of this study due to computational resource constraints. The AST-small no-pitch result therefore serves as a reference rather than a strict reproduction.
+
+    \item \textbf{Data Split Integrity:} The five-fold stratified splits (Section~\ref{sec:methodology}) were verified to contain no preset identifier shared between any training and test partition, ensuring that evaluation MAE reflects generalisation to unseen presets rather than memorisation.
+\end{itemize}
+
+\noindent
+These checks confirmed that the six V1 configurations were correctly implemented and that the AST-small no-pitch variant would serve as a valid reference against prior work.
+
+\subsubsection{Solution Implementation}
+
+\noindent
+The following steps describe the technical implementation of the six V1 configurations.
+
+\paragraph{1) Single-Scale Mel Spectrogram Extraction}
+Each audio clip is converted to a mel spectrogram using the mid-scale configuration: FFT size $n_{\text{fft}}=2{,}048$, hop length $H=512$, 128 mel bins between 20 Hz and 12{,}000 Hz (Table~\ref{tab:mel_scales}). The resulting $128 \times T$ matrix is stored as a \texttt{.npy} file. At training time, each spectrogram is padded with the minimum value or truncated along the time axis to produce a fixed $128 \times 224$ tensor, which is then Z-score normalised using training-split statistics.
+
+\paragraph{2) Backbone Adaptation to Mono Input}
+For the \textbf{SynthParamNet CNN}, the encoder consists of a convolutional stem followed by $N$ residual stages, each doubling the channel count; the final feature map is reduced to a $2C$-dimensional embedding by frequency-axis average pooling followed by time-axis max-pool $\oplus$ average-pool concatenation. For \textbf{AST-small}, the first patch-embedding convolution — originally expecting three RGB channels — is adapted by retaining the weights of the first channel: $W_{\text{mono}} = W_{\text{RGB},0}$. The CLS token of the final transformer layer serves as the $d$-dimensional mel embedding. For \textbf{ConvNeXt-tiny}, the same single-channel weight slice is used at the stem, followed by the same hybrid pooling as the CNN: $\mathbf{z} = [\text{MaxPool}(\mathbf{F});\, \text{AvgPool}(\mathbf{F})] \in \mathbb{R}^{2C}$.
+
+\paragraph{3) Pitch Conditioning Variants}
+Given the normalised MIDI pitch $p = (\text{midi} - 12) / (84 - 12) \in [0,1]$, three conditioning branches are implemented.
+In the \textbf{no-pitch} variant, no pitch information enters the model; the mel embedding $\mathbf{z}$ feeds directly to the head.
+In the \textbf{basic MLP} variant, $p$ passes through a two-layer MLP (Linear $\to$ ReLU $\to$ Linear) producing a 64-dimensional pitch vector $\mathbf{e}_p$, which is concatenated with $\mathbf{z}$: $\mathbf{z}_{\text{fused}} = [\mathbf{z};\, \mathbf{e}_p]$.
+In the \textbf{sinusoidal embedding} variant, $p$ is first encoded by $\boldsymbol{\phi}(p)$ (Equation~\ref{eq:sinusoidal}) before the same two-layer MLP, yielding a richer frequency-domain representation of pitch.
+
+\paragraph{4) Flat Regression Head}
+All six V1 configurations share the same three-layer regression head applied to the fused embedding:
+\begin{equation}
+    \hat{\mathbf{y}} = \sigma\!\left(W_3\, \text{ReLU}\!\left(W_2\, \text{ReLU}\!\left(W_1\, \mathbf{z}_{\text{fused}} + \mathbf{b}_1\right) + \mathbf{b}_2\right) + \mathbf{b}_3\right) \in [0,1]^{16}
+    \label{eq:flat_head}
+\end{equation}
+where $W_1 \in \mathbb{R}^{256 \times d_{\text{fused}}}$, $W_2 \in \mathbb{R}^{128 \times 256}$, $W_3 \in \mathbb{R}^{16 \times 128}$, and $\sigma$ is the element-wise Sigmoid function. The Sigmoid output bounds all predictions to $[0, 1]$, matching the normalised parameter range.
+
+\paragraph{5) Training Protocol}
+All models are trained with the AdamW optimiser (weight decay $10^{-4}$) for 100 epochs per fold. The batch size and base learning rate are architecture-dependent: the lightweight SynthParamNet CNN uses a larger batch size and higher learning rate, while the pre-trained ConvNeXt-tiny and AST-small backbones use smaller batch sizes and lower learning rates suited to fine-tuning large pre-trained models. For pre-trained backbones (AST, ConvNeXt), a differential learning rate is applied: the backbone parameters are updated at $0.1\times$ the head learning rate to preserve the ImageNet-22k representations during early fine-tuning. A cosine-annealing OneCycleLR scheduler with $\text{pct\_start}=0.3$ is used to warm up the learning rate over the first 30\% of training before annealing. Automatic mixed precision (AMP) training is enabled on the NVIDIA RTX 4090 with gradient clipping at $\text{max\_norm}=1.0$. The training loss is the standard (unweighted) SmoothL1 loss with $\beta=0.02$.
+
+\paragraph{6) Five-Fold Cross-Validation}
+Five independent stratified splits are generated from the V1/V2 dataset of $\approx 42{,}520$ samples using the timbre $\times$ octave bucket key (Equation~\ref{eq:bucket}). Each split produces a training set of $\approx 34{,}000$ samples and a test set of $\approx 4{,}252$ samples. For each fold, training is performed on the training partition and the model checkpoint with the lowest validation MAE is retained. Test MAE is reported as mean $\pm$ standard deviation across the five splits.
+
+\subsubsection{Solution Evaluation}
+
+\noindent
+Three consistent patterns emerge from the five-fold test results. First, ConvNeXt-tiny outperforms AST-small in every pitch conditioning condition, with the gap ranging from 0.0007 to 0.0017 MAE. This indicates that, at the scale of $\approx 42{,}520$ training samples, the local convolutional inductive bias of ConvNeXt extracts more discriminative timbral features from mel spectrograms than the global self-attention of AST. Second, pitch conditioning consistently reduces MAE for both backbones. The improvement is most pronounced for the \texttt{oscillator\_2\_transpose} parameter, whose prediction benefits directly from knowing the absolute MIDI pitch: in the no-pitch ConvNeXt configuration this parameter's MAE is 0.101, compared to 0.090 with sinusoidal conditioning. Third, the sinusoidal embedding provides a small but consistent further improvement over the basic MLP for both backbones, supporting the hypothesis that a multi-frequency Fourier encoding represents pitch more effectively than a single linear projection.
+
+\noindent \newline
+Across all configurations, the seven oscillator parameters (wave frame, level, unison voices, unison detune for both oscillators, and transpose) consistently show the highest per-parameter MAE, typically in the range $0.08$–$0.16$. Envelope times and filter parameters, by contrast, fall below $0.05$ in all configurations. This difficulty gradient reflects the fact that wavetable position and unison settings map non-linearly to the mel spectrogram, whereas envelope shape is directly visible in the amplitude trajectory of the spectrogram.
+
+\noindent \newline
+These findings establish two clear directions for V2. The single-scale mid-resolution spectrogram sacrifices either temporal resolution (for transient capture) or spectral resolution (for harmonic analysis) — suggesting that a multi-resolution input could provide complementary information that reduces the oscillator parameter error. Additionally, the concatenation-based pitch conditioning adds pitch as a side input but does not allow it to modulate the timbral features already extracted by the backbone, limiting its effectiveness. Iteration 2 therefore introduces a multi-scale three-channel input and replaces concatenation-based conditioning with Feature-wise Linear Modulation.
+
+
+% ═══════════════════════════════════════════════════════════
+\subsection{Iteration 2: Multi-Scale Input, FiLM Conditioning, and Grouped Prediction}
+
+\noindent
+The second iteration introduces four architectural enhancements motivated by the limitations identified in V1: a multi-scale three-channel mel spectrogram input, Feature-wise Linear Modulation (FiLM) for pitch conditioning, a grouped prediction head, and a weighted training loss. The V1 backbone comparison is retained with both AST-small and ConvNeXt-tiny, now both trained with the full V2 architecture.
+
+\subsubsection{Problem Investigation}
+
+\noindent
+V1 established that the single mid-scale mel spectrogram is the primary input representation. However, a single FFT window size enforces a fixed trade-off between time and frequency resolution. The mid-scale configuration ($n_{\text{fft}}=2{,}048$, hop$=512$) provides balanced resolution but is insufficient for resolving the fine harmonic structure that underlies wavetable timbres: discriminating between wavetable positions and oscillator waveforms requires the backbone to observe how individual harmonics are shaped and spaced, information that is best captured at long analysis windows. Conversely, the broad spectral morphology and coarse harmonic series structure that characterise pitch and tonal quality are most clearly visible at even longer windows. The primary motivation for stacking three resolutions is therefore to enrich the timbral and harmonic cues available to the backbone: the coarse scale ($n_{\text{fft}}=8{,}192$) exposes the harmonic series structure relevant to oscillator and pitch-sensitive parameters, the mid scale provides a balanced reference, and the fine scale ($n_{\text{fft}}=512$) adds short-time resolution that contributes complementary cues for transient and envelope-related features. All of this complementary information is entirely discarded in V1.
+
+\noindent \newline
+The second limitation concerns pitch conditioning. In V1, the pitch embedding is concatenated with the mel embedding after the backbone has finished processing the spectrogram. This late fusion means that the backbone extracts features without any awareness of pitch, and the pitch information enters only at the final fusion stage. Feature-wise Linear Modulation \cite{perez2018film} offers a more expressive alternative: it allows pitch to apply a learned affine transformation to the mel embedding, effectively modulating the feature representation before it enters the regression head. This conditional modulation is more expressive than concatenation because it enables pitch to suppress or amplify specific feature dimensions rather than merely appending new information.
+
+\noindent \newline
+A third limitation emerges from the V1 per-parameter analysis. Oscillator parameters have MAE values $2$–$3\times$ higher than envelope and filter parameters. A single flat regression head shared across all 16 parameters allocates identical capacity to easy and hard parameters alike, which is suboptimal when the prediction difficulty is highly non-uniform. This motivates a grouped prediction architecture that assigns wider, more expressive sub-networks to the harder oscillator group. This iteration therefore investigates:
+\begin{itemize}
+    \item Does stacking fine, mid, and coarse mel spectrograms as a three-channel input provide complementary time-frequency information that reduces MAE compared to the single mid-scale input?
+    \item Does Feature-wise Linear Modulation provide a more effective pitch conditioning mechanism than concatenation-based fusion?
+\end{itemize}
+
+\subsubsection{Solution Design}
+
+\noindent
+The V2 solution introduces four changes applied uniformly to both the ConvNeXt-tiny and AST-small backbones. The first change replaces the single-scale mel input with a three-channel stack of fine, mid, and coarse spectrograms (Section~\ref{sec:methodology}, Figure~\ref{fig:multiscale_stack}), producing a $(3, 128, 224)$ input tensor directly compatible with the pre-trained RGB backbone stems. The second change replaces concatenation-based pitch conditioning with FiLM, which derives scale and shift parameters $(\boldsymbol{\gamma}, \boldsymbol{\beta})$ from the pitch embedding and applies them to the backbone output embedding. The third change introduces a grouped prediction head that assigns four specialised sub-MLPs to semantically related parameter groups, with the oscillator group receiving a wider sub-network to handle its higher prediction difficulty. The fourth change introduces a group-weighted SmoothL1 training objective that further focuses learning on the oscillator parameters by doubling their loss contribution. Figure~\ref{fig:v2_design} shows the complete V2 architecture.
+
+\begin{figure}[H]
+\centering
+\resizebox{\linewidth}{!}{%
+\begin{tikzpicture}[
+  font=\small,
+  node distance=0.55cm and 1.0cm,
+  block/.style={rectangle, rounded corners=5pt, draw=gray!60, minimum height=1.1cm,
+                align=center, text width=2.8cm},
+  arrow/.style={-{Stealth[length=3.5mm]}, thick, gray!55}
+]
+
+% Input
+\node[block, fill=orange!12] (mel) at (0,0)
+  {$(3,\!128,\!224)$\\3-ch mel tensor};
+\node[block, fill=gray!10] (pitch) at (0,-2.5)
+  {MIDI note $p$\\(normalised)};
+
+% Sinusoidal embedding
+\node[block, fill=gray!12] (sinemb) at (3.4,-2.5)
+  {Sinusoidal\\emb.\ $\boldsymbol{\phi}(p)$};
+
+% Backbone
+\node[block, fill=blue!10] (backbone) at (3.4,0)
+  {Backbone\\(ConvNeXt-tiny\\or AST-small)};
+
+% FiLM MLP
+\node[block, fill=teal!12] (filmmlp) at (6.8,-2.5)
+  {FiLM MLP\\$\rightarrow(\boldsymbol{\gamma},\boldsymbol{\beta})$};
+
+% Embedding z
+\node[block, fill=blue!10] (emb) at (6.8,0)
+  {Mel embedding\\$\mathbf{z}\in\mathbb{R}^{d}$};
+
+% FiLM box (centre)
+\node[block, fill=teal!18] (film) at (10.2,-1.25)
+  {FiLM\\$\tilde{\mathbf{z}}=(1{+}\boldsymbol{\gamma})\odot\mathbf{z}+\boldsymbol{\beta}$};
+
+% Grouped head
+\node[block, fill=violet!15] (head) at (13.6,-1.25)
+  {Grouped\\prediction\\head};
+
+% Output
+\node[block, fill=green!12] (out) at (17.0,-1.25)
+  {$\hat{\mathbf{y}}\in[0,1]^{16}$\\(16 params)};
+
+% Arrows
+\draw[arrow] (mel)     -- (backbone);
+\draw[arrow] (backbone)-- (emb);
+\draw[arrow] (emb)     |- (film.west);
+\draw[arrow] (pitch)   -- (sinemb);
+\draw[arrow] (sinemb)  -- (filmmlp);
+\draw[arrow] (filmmlp) |- (film.west);
+\draw[arrow] (film)    -- (head);
+\draw[arrow] (head)    -- (out);
+
+\end{tikzpicture}%
+}
+\vspace{0.3cm}
+\caption{V2 (and V3) model architecture. The three-channel mel tensor is processed by the backbone into embedding $\mathbf{z}$; the FiLM conditioner derives $(\boldsymbol{\gamma},\boldsymbol{\beta})$ from the sinusoidal pitch embedding and applies an affine modulation; the grouped prediction head produces the 16 normalised parameter predictions.}
+\label{fig:v2_design}
+\end{figure}
+
+\noindent
+The FiLM conditioning and grouped head are formalized in Equations~\ref{eq:film_pred}--\ref{eq:weighted_loss} in the Solution Implementation below. The grouped head replaces the single flat MLP of V1 (Equation~\ref{eq:flat_head}) with four specialised sub-networks, each operating on the full modulated embedding $\tilde{\mathbf{z}}$ but predicting only its assigned parameter subset.
+
+\subsubsection{Design Validation}
+
+\noindent
+The following validation checks were performed before full-scale V2 training:
+
+\begin{itemize}
+    \item \textbf{Three-Channel Weight Adaptation:} The adapted first-layer weights for the three-channel input were verified to preserve activation magnitudes. Averaging the three RGB weight slices and dividing by three ensures that a spectrogram tensor with values in the same range as an ImageNet image produces activations of the same expected magnitude as the original RGB stem, preventing the need for re-scaling the learning rate.
+
+    \item \textbf{FiLM Identity Initialisation:} The FiLM MLP was initialised so that its output weights are zero, producing $\boldsymbol{\gamma}=\mathbf{0}$ and $\boldsymbol{\beta}=\mathbf{0}$ at epoch zero. This ensures that $\tilde{\mathbf{z}} = \mathbf{z}$ at initialisation, meaning V2 training begins from a state equivalent to the V1 no-pitch model, avoiding early-training instability caused by randomly-scaled feature modulations.
+
+    \item \textbf{Grouped Head Output Consistency:} The four sub-MLP outputs were verified to be concatenated in the correct parameter order (indices 0–6, 7–10, 11–12, 13–15) to produce a 16-dimensional prediction vector, and the final Sigmoid activation was confirmed to bound all outputs to $[0,1]$.
+
+    \item \textbf{Weighted Loss Gradient Balance:} Training loss logging confirmed that the doubled weight applied to the oscillator group ($w_{\text{osc}}=2$) produces proportionally larger gradients for indices 0–6, without causing gradient magnitude instability for the remaining parameter groups whose weights remain at 1.
+\end{itemize}
+
+\subsubsection{Solution Implementation}
+
+\paragraph{1) Three-Channel Input Construction}
+The three mel spectrograms extracted at fine, mid, and coarse resolutions (Table~\ref{tab:mel_scales}) are each padded or truncated to $128 \times 224$ and Z-score normalised independently using training-split statistics. The three normalised matrices are then stacked along the channel dimension to form the $(3, 128, 224)$ input tensor supplied to the backbone.
+
+\paragraph{2) Backbone Adaptation to Three-Channel Input}
+Both ConvNeXt-tiny and AST-small are adapted from RGB three-channel to audio three-channel input by averaging the pre-trained RGB stem weights across the colour dimension and scaling:
+\begin{equation}
+    W_{\text{audio}} = \frac{1}{3}\sum_{c=1}^{3} W_{\text{RGB},c}
+    \label{eq:weight_adapt}
+\end{equation}
+This initialisation ensures that, in expectation, a spectrogram tensor at typical normalised magnitude produces the same activation statistics as an RGB image, allowing the pre-trained deeper layers to function correctly from the first forward pass.
+
+\paragraph{3) FiLM Pitch Conditioning}
+Given the sinusoidal pitch embedding $\boldsymbol{\phi}(p) \in \mathbb{R}^{128}$, a two-layer MLP predicts the FiLM scale and shift parameters:
+\begin{equation}
+    (\boldsymbol{\gamma},\, \boldsymbol{\beta}) = \text{MLP}_{\text{FiLM}}\!\left(\boldsymbol{\phi}(p)\right), \qquad \boldsymbol{\gamma},\, \boldsymbol{\beta} \in \mathbb{R}^{d}
+    \label{eq:film_pred}
+\end{equation}
+The modulated embedding is then computed as:
+\begin{equation}
+    \tilde{\mathbf{z}} = (1 + \boldsymbol{\gamma}) \odot \mathbf{z} + \boldsymbol{\beta}
+    \label{eq:film_apply}
+\end{equation}
+where $\odot$ denotes element-wise multiplication and $d$ is the backbone output dimension. The multiplicative term $(1 + \boldsymbol{\gamma})$ allows the conditioning to scale individual feature dimensions up or down based on pitch, while the additive term $\boldsymbol{\beta}$ shifts them; together they provide a more expressive transformation than the additive-only concatenation of V1.
+
+\paragraph{4) Grouped Prediction Head}
+The modulated embedding $\tilde{\mathbf{z}}$ is fed to four specialised sub-MLPs, one per parameter group. Table~\ref{tab:grouped_head} details the group composition and hidden widths.
+
+\begin{table}[H]
+\centering
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{llcc}
+\hline
+\textbf{Group} & \textbf{Parameters (indices)} & \textbf{Count} & \textbf{Width} \\
+\hline
+Oscillator & \texttt{osc1\_wave\_frame}, \texttt{osc1\_level}, \texttt{osc1\_unison\_voices}, & 7 & $2h$ \\
+           & \texttt{osc1\_unison\_detune}, \texttt{osc2\_wave\_frame}, \texttt{osc2\_level}, & & \\
+           & \texttt{osc2\_transpose} \hspace{0.2em}(indices 0–6) & & \\
+Envelope   & \texttt{env1\_attack}, \texttt{env1\_decay}, \texttt{env2\_attack},   & 4 & $h/2$ \\
+           & \texttt{env2\_decay} \hspace{0.2em}(indices 7–10)                     & & \\
+Filter     & \texttt{filter1\_cutoff}, \texttt{filter1\_resonance} \hspace{0.2em}(indices 11–12) & 2 & $h/2$ \\
+Misc       & \texttt{sample\_level}, \texttt{mod1\_amount}, \texttt{reverb\_mix} \hspace{0.2em}(indices 13–15) & 3 & $h/2$ \\
+\hline
+\end{tabular}
+\vspace{0.3cm}
+\caption{Grouped prediction head structure. $h$ denotes the base hidden dimension; the oscillator group receives a wider sub-network ($2h$) to accommodate its higher prediction complexity.}
+\label{tab:grouped_head}
+\end{table}
+
+\noindent Each sub-MLP produces its group's predictions via:
+\begin{equation}
+    \hat{\mathbf{y}}_g = \sigma\!\left(\text{MLP}_g(\tilde{\mathbf{z}})\right), \quad g \in \{1, 2, 3, 4\}
+    \label{eq:grouped_head}
+\end{equation}
+The final prediction is the concatenation $\hat{\mathbf{y}} = [\hat{\mathbf{y}}_1;\, \hat{\mathbf{y}}_2;\, \hat{\mathbf{y}}_3;\, \hat{\mathbf{y}}_4] \in [0,1]^{16}$.
+
+\paragraph{5) Weighted SmoothL1 Training Objective}
+The training loss is a group-weighted SmoothL1 loss with $\beta=0.02$:
+\begin{equation}
+    \mathcal{L} = \sum_{g=1}^{4} w_g \cdot \text{SmoothL1}_{\beta}\!\left(\hat{\mathbf{y}}_g,\, \mathbf{y}_g\right), \qquad w_{\text{osc}} = 2,\quad w_g = 1 \text{ otherwise}
+    \label{eq:weighted_loss}
+\end{equation}
+The oscillator group receives double weight because its parameters are perceptually dominant in determining the timbral character of a synthesizer sound \cite{roads1996computer}, and because V1 results confirm they are the hardest to predict. The SmoothL1 formulation, quadratic near zero and linear in the tail, provides robustness against occasional large prediction errors on high-variance parameters.
+
+\paragraph{6) Training Protocol}
+All V2 models are trained for 40 epochs per fold. The batch size is architecture-dependent — 128 or 256 depending on the model family — reflecting the different memory footprints of the SynthParamNet CNN, ConvNeXt-tiny, and AST-small. All other settings are inherited from V1: AdamW ($\text{wd}=10^{-4}$), differential learning rate ($0.1\times$ for backbone), OneCycleLR ($\text{pct\_start}=0.3$), AMP, and gradient clipping ($\text{max\_norm}=1.0$).
+
+\paragraph{7) Ablation Design}
+To isolate the contribution of FiLM pitch conditioning, each backbone is trained in two variants: the full V2 model (multi-scale input + FiLM + grouped head + weighted loss) and a no-pitch variant in which the FiLM branch is removed entirely and no pitch information enters the model, while all other components remain identical. This controlled comparison attributes any MAE difference exclusively to the presence of pitch conditioning.
+
+\subsubsection{Solution Evaluation}
+
+\noindent
+The combined V2 enhancements produce a substantial reduction in MAE. The best V2 model, ConvNeXt-tiny-v2 with FiLM conditioning ($0.0665 \pm 0.0002$), improves over the V1 best ($0.0758 \pm 0.0005$) by approximately 12\%, confirming that the three-channel multi-scale input captures complementary time-frequency information that a single-scale representation cannot provide. ConvNeXt-tiny continues to outperform AST-small, now by a margin of 0.0048 MAE under FiLM conditioning.
+
+\noindent \newline
+FiLM conditioning provides a small but consistent improvement over the no-pitch variant for both backbones: $-0.0016$ MAE for ConvNeXt ($2.4\%$ reduction) and $-0.0014$ for AST ($1.9\%$ reduction). This improvement is statistically consistent across all five splits in both cases, confirming that the pitch information is genuinely useful. Nevertheless, the magnitude of the FiLM benefit is modest relative to the V1-to-V2 improvement, suggesting that the pitch conditioning pathway is not being fully exploited. Inspection of per-parameter results reveals that \texttt{osc2\_transpose} — the parameter most directly related to pitch — benefits from FiLM conditioning (its MAE drops from 0.078 to 0.076 in ConvNeXt), but the gain is smaller than expected for a parameter whose ground truth should be directly predictable from the MIDI note.
+
+\noindent \newline
+Beyond the limited FiLM benefit, both V2 models exhibit clear signs of overfitting: training MAE continues to decrease well below validation MAE, which plateaus around $0.055$–$0.060$ by epoch 30. This train-to-validation gap indicates that the $\approx 42{,}520$-sample dataset is insufficient to fully regularise models of this capacity. This combination of limited FiLM effectiveness and overfitting raises a critical question for Iteration 3: \textit{Is FiLM conditioning inherently insufficient for this task, or does its effectiveness depend on training data that presents the same preset parameter vector at multiple pitch positions — forcing the model to leverage pitch to resolve spectral ambiguity rather than relying solely on absolute spectral position?} To address both weaknesses simultaneously, Iteration 3 re-renders the existing $\approx 42{,}520$ presets at three different MIDI pitches each, rather than generating new presets. This approach expands the dataset to approximately $170{,}000$ samples while ensuring that the FiLM conditioning pathway receives meaningful cross-pitch variation: the same parameter target $\mathbf{y}$ now appears paired with multiple spectrally distinct inputs, directly testing whether pitch-aware training activates the FiLM pathway.
+
+
+% ═══════════════════════════════════════════════════════════
+\subsection{Iteration 3: Multi-Pitch Dataset Expansion and SpecAugment Regularisation}
+
+\noindent
+The third iteration addresses the two main weaknesses identified in V2 — limited FiLM conditioning effectiveness and mild overfitting — through changes to the training data regime rather than to the model architecture. The V2 architecture (Figure~\ref{fig:v2_design}) is retained without modification; the intervention is to re-render each preset at three distinct MIDI pitches per timbre and to introduce SpecAugment regularisation during training.
+
+\subsubsection{Problem Investigation}
+
+\noindent
+In V1 and V2, every preset in the dataset is rendered at exactly one MIDI pitch, sampled uniformly from the timbre's valid range. This means that the model never observes the same parameter vector $\mathbf{y}$ at different spectral positions: each training sample is a unique (spectrogram, parameters) pair. A model in this setting can achieve low training loss by learning to associate specific absolute spectral patterns with parameter values, effectively using the pitch-dependent spectral position of harmonics as an implicit shortcut. Under this regime, the FiLM conditioning pathway receives no training pressure to actually modulate features based on pitch, because pitch-independent spectral matching is already sufficient to minimise the loss.
+
+\noindent \newline
+The training logs from V2 provide additional evidence of a generalisation problem: by epoch 30, both the ConvNeXt-tiny and AST-small models achieve training MAE values below $0.020$, while validation MAE plateaus around $0.055$–$0.060$. This train-to-validation gap indicates that the models have partially memorised spectral patterns specific to individual presets rather than learning a generalised mapping from timbre features to synthesis parameters. With only $\approx 42{,}520$ training samples shared across two backbones with 28M and 23M parameters respectively, regularisation through data diversity is a natural remedy.
+
+\noindent \newline
+\textit{Will rendering each preset at three distinct MIDI pitches — so that the model observes the same parameter vector $\mathbf{y}$ at three different spectral positions — activate the FiLM conditioning pathway and, combined with SpecAugment regularisation, reduce the train-to-validation gap?}
+
+\subsubsection{Solution Design}
+
+\noindent
+The V3 solution addresses both weaknesses through a redesigned data generation regime. Each of the $\approx 42{,}520$ presets from the V1/V2 dataset is re-rendered at three fixed MIDI pitches per timbre, selected to cover the low, mid, and high registers of each timbre's valid range. The rendering pipeline uses a hash-based checkpoint system keyed on the (sorted preset parameters, MIDI note) pair: any combination already present from V1/V2 rendering is detected and skipped, while the three new fixed-note renderings are appended directly to the existing dataset file in append mode. Because the V1/V2 random note is typically distinct from the three fixed V3 notes, most presets gain three new renderings in addition to their original one, expanding the dataset from $\approx 42{,}520$ to $\approx 170{,}000$ samples. Crucially, each parameter vector $\mathbf{y}$ now appears paired with multiple spectrally distinct audio clips, providing the FiLM conditioning pathway with genuine cross-pitch training signal: it must learn to produce pitch-specific feature modulations that allow the same backbone embedding to be corrected for pitch-dependent spectral shift.
+
+\noindent \newline
+SpecAugment \cite{park2019specaugment} is introduced as an online training-time regulariser. Two time masks and two frequency masks are applied independently to each training sample per forward pass, preventing the model from over-relying on narrow spectral or temporal features and further increasing the effective diversity of the training distribution. Figure~\ref{fig:v3_design} illustrates the V3 data generation and augmentation pipeline.
+
+\begin{figure}[H]
+\centering
+\resizebox{\linewidth}{!}{%
+\begin{tikzpicture}[
+  font=\small,
+  node distance=0.6cm and 1.4cm,
+  box/.style={rectangle, rounded corners=5pt, draw=gray!60, align=center,
+              minimum height=1.1cm, text width=2.8cm},
+  label/.style={font=\scriptsize, text=gray!65, align=center},
+  arrow/.style={-{Stealth[length=3.5mm]}, thick, gray!55}
+]
+
+% Preset box
+\node[box, fill=orange!10] (preset) {Synthesizer\\preset $\theta$};
+
+% Three MIDI note boxes
+\node[box, fill=blue!8,  right=1.8cm of preset, yshift= 2.0cm] (n1) {MIDI note 1\\(low register)};
+\node[box, fill=blue!8,  right=1.8cm of preset, yshift= 0.0cm] (n2) {MIDI note 2\\(mid register)};
+\node[box, fill=blue!8,  right=1.8cm of preset, yshift=-2.0cm] (n3) {MIDI note 3\\(high register)};
+
+% Audio render boxes
+\node[box, fill=gray!8, right=1.8cm of n1] (a1) {Audio clip 1};
+\node[box, fill=gray!8, right=1.8cm of n2] (a2) {Audio clip 2};
+\node[box, fill=gray!8, right=1.8cm of n3] (a3) {Audio clip 3};
+
+% Three-channel mel boxes
+\node[box, fill=teal!10, right=1.8cm of a1] (s1) {3-ch mel\\(fine/mid/coarse)\\+ SpecAugment};
+\node[box, fill=teal!10, right=1.8cm of a2] (s2) {3-ch mel\\(fine/mid/coarse)\\+ SpecAugment};
+\node[box, fill=teal!10, right=1.8cm of a3] (s3) {3-ch mel\\(fine/mid/coarse)\\+ SpecAugment};
+
+% Label box (shared parameter target)
+\node[box, fill=green!10, right=1.8cm of s2] (label) {Parameter\\target $\mathbf{y}$\\(shared)};
+
+% Arrows: preset → MIDI notes
+\draw[arrow] (preset.east) -- ++(0.4,0) |- (n1.west);
+\draw[arrow] (preset.east) -- ++(0.4,0) |- (n2.west);
+\draw[arrow] (preset.east) -- ++(0.4,0) |- (n3.west);
+
+% Arrows: MIDI notes → audio
+\draw[arrow] (n1) -- (a1);
+\draw[arrow] (n2) -- (a2);
+\draw[arrow] (n3) -- (a3);
+
+% Arrows: audio → mel tensors
+\draw[arrow] (a1) -- (s1);
+\draw[arrow] (a2) -- (s2);
+\draw[arrow] (a3) -- (s3);
+
+% Arrows: mels → shared label
+\draw[arrow] (s1.east) -- ++(0.4,0) |- (label.west);
+\draw[arrow] (s2.east) -- (label.west);
+\draw[arrow] (s3.east) -- ++(0.4,0) |- (label.west);
+
+% Timbre note annotation
+\node[label, above=0.2cm of n1] {e.g.\ bass: C1 / C2 / C3};
+
+\end{tikzpicture}%
+}
+\vspace{0.3cm}
+\caption{V3 data pipeline. Each preset is rendered at three fixed MIDI pitches, producing three spectrally different audio clips that share the same parameter target $\mathbf{y}$. Each clip is converted to a three-channel mel tensor (fine/mid/coarse); SpecAugment masks are applied online during training only.}
+\label{fig:v3_design}
+\end{figure}
+
+\noindent
+Because each preset now contributes multiple training samples (the original V1/V2 rendering plus up to three new fixed-note renders), the dataset split must be performed at the preset level to prevent leakage: all renderings of a given preset must be assigned to the same partition. This is a stricter requirement than the V1/V2 splits and is enforced through a preset-level grouping step before stratification.
+
+\subsubsection{Design Validation}
+
+\begin{itemize}
+    \item \textbf{Preset-Level Split Integrity:} The splitting procedure was verified to assign all three pitch renderings of every preset to the same partition (training, validation, or test). A post-split check confirmed zero preset-ID overlap between the training and validation sets, ensuring that the validation MAE reflects generalisation to unseen presets rather than to unseen pitch renderings of known presets.
+
+    \item \textbf{SpecAugment Parameter Selection:} Time mask width was capped at 30 frames ($\approx 3.5$ seconds at mid-scale hop) and frequency mask width at 15 mel bins (out of 128). These limits were selected to ensure that each masked spectrogram retains sufficient spectral content to identify the dominant timbre class, while providing enough stochastic variation to prevent feature co-adaptation.
+
+    \item \textbf{MIDI Note Register Coverage:} The fixed MIDI note schedule per timbre (Table~\ref{tab:v3_midi}) was verified to span the low, mid, and high registers of each timbre's valid range, ensuring that for every timbre class the model encounters pitch variation across at least two octaves during training.
+
+    \item \textbf{Shared Evaluation Protocol:} A fixed set of 100 held-out samples (\texttt{shared\_eval\_set.json}) was constructed from the V1/V2 test set, ensuring that both V2 and V3 models are evaluated on identical audio clips and preset parameter targets. This shared evaluation set enables a direct comparison of MSS values — which require Vital re-rendering — between versions without any confounding differences in evaluation samples.
+\end{itemize}
+
+\subsubsection{Solution Implementation}
+
+\paragraph{1) Multi-Pitch Audio Rendering}
+Each of the $\approx 42{,}520$ presets from the original dataset is re-rendered at three fixed MIDI pitches per timbre, following the schedule in Table~\ref{tab:v3_midi}. New entries are appended to the existing \texttt{combined\_dataset.jsonl} in append mode; the hash keyed on (sorted preset parameters, MIDI note) ensures that any (preset, note) pair already rendered in V1/V2 is detected and skipped. After silence filtering, the expanded dataset contains approximately $170{,}000$ samples — the original $\approx 42{,}520$ V1/V2 entries plus three new renders per preset.
+
+\begin{table}[H]
+\centering
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{lcc}
+\hline
+\textbf{Timbre} & \textbf{MIDI notes} & \textbf{Pitch names} \\
+\hline
+bass   & 24, 36, 48 & C1, C2, C3 \\
+lead   & 48, 60, 72 & C3, C4, C5 \\
+pad    & 36, 54, 72 & C2, F$\sharp$3, C5 \\
+percs  & 36, 60, 78 & C2, C4, F$\sharp$5 \\
+random & 24, 48, 72 & C1, C3, C5 \\
+\hline
+\end{tabular}
+\vspace{0.3cm}
+\caption{Fixed MIDI pitches per timbre used in V3. Each note is rendered independently for every preset, producing three training samples with the same parameter target $\mathbf{y}$.}
+\label{tab:v3_midi}
+\end{table}
+
+\paragraph{2) SpecAugment Online Augmentation}
+During training, each input tensor $(3, 128, 224)$ is augmented with two independent time masks (each with width drawn from $\mathcal{U}[0, 30]$ frames) and two independent frequency masks (each with width drawn from $\mathcal{U}[0, 15]$ mel bins). The same mask pattern is applied identically to all three channel slices of the tensor, preserving the inter-channel consistency of the fine, mid, and coarse spectrograms. Masked values are replaced with the global minimum of the normalised spectrogram. SpecAugment is disabled at validation and test time.
+
+\paragraph{3) Preset-Level Dataset Split}
+The $\approx 42{,}520$ unique presets are stratified by timbre $\times$ octave bucket (Equation~\ref{eq:bucket}) and split into training (80\%), validation (10\%), and test (10\%) partitions at the preset level. All renderings of each preset follow their preset's partition assignment, producing $\approx 136{,}000$ training samples and $\approx 17{,}000$ validation samples. A single split is used for V3 (rather than five-fold cross-validation) due to the computational cost of training two models on $\approx 136{,}000$ samples for 40 epochs.
+
+\paragraph{4) Training Configuration}
+The model architecture is identical to V2 (ConvNeXt-tiny and AST-small backbones, FiLM conditioning, grouped prediction head, weighted SmoothL1 loss). Training hyperparameters are also unchanged: AdamW ($\text{wd}=10^{-4}$), differential learning rate, OneCycleLR ($\text{pct\_start}=0.3$), 40 epochs, architecture-dependent batch size (128 or 256), AMP. SpecAugment augmentation is active during the forward passes on the training partition only.
+
+\paragraph{5) MSS Evaluation Protocol}
+Both V2 and V3 models are evaluated on the shared 100-sample held-out set using the Multi-Scale Spectral (MSS) loss as a perceptual complement to parameter MAE. For each sample, the predicted parameter vector $\hat{\mathbf{y}}$ is passed to Vital via Pedalboard to generate a re-rendered audio clip; the MSS loss is then computed as the mean absolute difference between the log-magnitude spectrograms of the original and re-rendered clips across four FFT scales ($n_{\text{fft}} \in \{128, 512, 2{,}048, 8{,}192\}$). A lower MSS value indicates a closer spectral match between original and predicted audio.
+
+\paragraph{6) Ablation: FiLM vs No-Pitch Under V3}
+The same FiLM-conditioned vs no-pitch comparison used in V2 is repeated under the V3 training regime, producing four models in total: ConvNeXt-tiny and AST-small, each in FiLM and no-pitch variants, all trained on the expanded multi-pitch dataset with SpecAugment. The change in the MAE gap between FiLM and no-pitch variants from V2 to V3 is the primary test of the multi-pitch training hypothesis.
+
+\subsubsection{Solution Evaluation}
+
+\noindent
+Multi-pitch rendering and SpecAugment together produce the largest iteration-over-iteration improvement in the study. The best V3 model, AST-small-v2 with FiLM, achieves a MAE of $0.0525$ on the shared evaluation set, compared to $0.0713$ for the corresponding V2 model — a $26\%$ reduction. Both V3 models surpass all V2 models by a substantial margin, confirming that dataset scale and pitch diversity are the primary bottleneck that was limiting V2 performance.
+
+\noindent \newline
+The primary design hypothesis of V3 is confirmed by the evolution of the FiLM conditioning gap. In V2, FiLM conditioning already provides a small but consistent benefit on the five-fold test sets (ConvNeXt: FiLM $0.0665$ vs no-pitch $0.0681$; AST: FiLM $0.0713$ vs no-pitch $0.0727$), a gain of $0.0016$ and $0.0014$ respectively. In V3, this benefit is amplified for both backbones: $-0.0020$ MAE for ConvNeXt ($3.6\%$ improvement) and $-0.0035$ for AST ($6.3\%$ improvement). The larger FiLM gap in V3 confirms that multi-pitch training data enhances the effectiveness of pitch conditioning: when the model is forced to observe the same parameter vector at multiple spectral positions, the FiLM pathway receives stronger training signal and learns more expressive pitch-dependent modulations. The modest but non-zero V2 benefit suggests the pathway is already partially active on single-pitch data; V3's cross-pitch diversity amplifies it.
+
+\noindent \newline
+A second notable finding is the reversal of the ConvNeXt vs AST ranking. In V1 and V2, ConvNeXt-tiny consistently outperformed AST-small, suggesting that local convolutional feature extraction was more effective than global self-attention at the $\approx 42{,}520$-sample scale. In V3, AST-small overtakes ConvNeXt on both MAE ($0.0525$ vs $0.0530$) and MSS ($1.096$ vs $1.222$). This inversion is consistent with the well-established scaling behaviour of Transformer architectures \cite{dosovitskiy2021vit}: with sufficient data, global self-attention over the full mel frame captures inter-frequency dependencies — such as the harmonic series structure of pitched sounds — that local convolutions cannot model as efficiently.
+
+\noindent \newline
+The MSS metric confirms and extends the MAE results. AST-small-v2 with FiLM achieves the lowest average MSS across all eight configurations ($1.096$), and the improvement is consistent across all four FFT scales, from $1.043$ at $n_{\text{fft}}=8{,}192$ (harmonic-sensitive) to $1.230$ at $n_{\text{fft}}=128$ (energy-sensitive). Because MSS is computed through Vital re-rendering and is not optimised during training, this agreement between parameter-space MAE and perceptual spectral distance confirms that the parameter estimation improvements translate directly into audibly better synthesizer reproductions.
+
+\noindent \newline
+Collectively, the three iterations address the research questions posed in Section~\ref{sec:introduction}: V1 establishes that ConvNeXt outperforms AST at limited data scale; V2 confirms that multi-scale mel input delivers a significant MAE improvement over single-scale; and V3 demonstrates that FiLM pitch conditioning requires multi-pitch training data to function as intended, and that when given sufficient data diversity, the AST architecture achieves the best overall parameter estimation and perceptual accuracy.

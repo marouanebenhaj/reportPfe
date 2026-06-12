@@ -1,0 +1,16 @@
+\section*{Abstract}
+
+\noindent
+The inverse synthesis problem, recovering synthesizer parameters from audio, is inherently ill-posed, as multiple parameter configurations can produce perceptually similar outputs. This ambiguity, combined with nonlinear parameter interactions, makes manual sound reproduction a time-consuming task for music producers. We investigate the feasibility of learning this inverse mapping using deep learning.
+
+\noindent \newline
+To address this challenge, we propose a supervised regression framework using a custom dataset generated programmatically via the Pedalboard library, driving Vital, an open-source and widely used wavetable synthesizer. We restrict the parameter space to 16 synthesis parameters covering oscillators, envelopes, filters, and effects, keeping the task tractable while retaining musical relevance.
+
+\noindent \newline
+Our experiments progress across three iterations. In V1, we compare three architectures: a custom residual Convolutional Neural Network (CNN), ConvNeXt, and an Audio Spectrogram Transformer (AST), on a single-scale mel spectrogram input, establishing ConvNeXt and AST as the strongest candidates. In V2, we advance both architectures with three-scale mel spectrogram input (fine, mid, coarse), Feature-wise Linear Modulation (FiLM) pitch conditioning, and a grouped prediction head, trained on the same dataset. In V3, we further improve upon V2 via multi-pitch rendering per preset and Spectrogram Augmentation (SpecAugment) regularisation on a significantly expanded dataset.
+
+\noindent \newline
+We find that multi-scale spectrograms provide richer timbral information, yielding significant Mean Absolute Error (MAE) improvements for both ConvNeXt and AST from V1 to V2, though we observed signs of overfitting at this stage. In V3, we show that multi-pitch rendering and SpecAugment effectively mitigate overfitting and, crucially, activate FiLM pitch conditioning, which had proven ineffective in V2 due to single-pitch data. On a shared 100-sample evaluation set, we observe that ConvNeXt-tiny achieves MAE 0.0739 in V2 versus 0.0755 for AST; in V3, AST narrows this gap to achieve MAE 0.0525 vs.\ 0.0530 for ConvNeXt, with AST also leading on the Multi-Scale Spectral loss (1.10 vs.\ 1.22), suggesting that global self-attention becomes increasingly advantageous with greater data diversity.
+
+\noindent \newline
+\textbf{Keywords:} Audio Inversion --- Sound Synthesis --- Deep Learning --- Parameter Estimation --- Mel-Spectrogram --- Neural Audio Processing
