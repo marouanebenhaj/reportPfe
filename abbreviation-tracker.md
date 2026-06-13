@@ -10,13 +10,14 @@ Format: defined = full name written at this location. Subsequent uses are abbrev
 | AST          | Audio Spectrogram Transformer                      | Introduction   | Project Context    | defined  |
 | mel          | Mel Scale (perceptual frequency scale)             | Introduction   | Project Context    | used only — compound word (mel spectrogram), no inline definition needed |
 | ConvNeXt     | Conv. Network in the Style of Vision Transformers  | Introduction   | Purpose of Study   | used only — proper model name, no inline definition needed |
-| FiLM         | Feature-wise Linear Modulation                     | Introduction   | Purpose of Study   | needs definition added |
-| MIDI         | Musical Instrument Digital Interface               | Introduction   | Purpose of Study   | needs definition added |
+| FiLM         | Feature-wise Linear Modulation                     | Introduction   | Purpose of Study   | defined  |
+| MIDI         | Musical Instrument Digital Interface               | Introduction   | Purpose of Study   | defined  |
 | MAE          | Mean Absolute Error                                | Introduction   | Scope              | defined  |
 | MSS          | Multi-Scale Spectral Loss                          | Introduction   | Scope              | defined  |
 | DSR          | Design Science Research                            | Introduction   | Approach & Boundaries | defined (not in abbreviations list — consider adding) |
-| WAV          | Waveform Audio File Format                         | Introduction   | Limitations        | needs definition added |
-| VST          | Virtual Studio Technology                          | Introduction   | Delimitations      | needs definition added |
+| WAV          | Waveform Audio File Format                         | Introduction   | Limitations        | defined  |
+| VST          | Virtual Studio Technology                          | Introduction   | Delimitations      | defined  |
+| MP3          | Moving Picture Experts Group Audio Layer III       | Introduction   | Delimitations      | defined  |
 | AMP          | Automatic Mixed Precision                          | TBD            | TBD                | not yet encountered |
 | AdamW        | Adaptive Moment Estimation with Weight Decay       | TBD            | TBD                | not yet encountered |
 | CLS          | Classification Token (Transformer)                 | TBD            | TBD                | not yet encountered |
@@ -35,6 +36,6 @@ Format: defined = full name written at this location. Subsequent uses are abbrev
 | ViT          | Vision Transformer                                 | TBD            | TBD                | not yet encountered |
 
 ## Notes
-- Abbreviations marked **needs definition added** still appear without their full name at first use in the introduction — these should be fixed next.
+- All introduction abbreviations are now defined at first use. Remaining **TBD** entries will be tracked as their sections are written.
 - **DSR** is used inline but not in the abbreviations list — consider adding it.
 - Abstract is standalone: abbreviations are defined there independently and do not count as first use for the report body.
