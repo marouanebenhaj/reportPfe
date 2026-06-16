@@ -20,20 +20,22 @@ Format: defined = full name written at this location. Subsequent uses are abbrev
 | MP3          | Moving Picture Experts Group Audio Layer III       | Introduction   | Delimitations      | defined  |
 | AMP          | Automatic Mixed Precision                          | TBD            | TBD                | not yet encountered |
 | AdamW        | Adaptive Moment Estimation with Weight Decay       | TBD            | TBD                | not yet encountered |
-| CLS          | Classification Token (Transformer)                 | TBD            | TBD                | not yet encountered |
-| DDSP         | Differentiable Digital Signal Processing           | TBD            | TBD                | not yet encountered |
+| CLS          | Classification Token (Transformer)                 | Background     | Vision Transformers and AST | defined  |
+| DFT          | Discrete Fourier Transform                         | Background     | Audio Representations | defined  |
+| dB           | Decibels                                           | Background     | Physics of Sound Generation | defined  |
+| DDSP         | Differentiable Digital Signal Processing           | Background     | Differentiable Synthesis | defined  |
 | DSP          | Digital Signal Processing                          | TBD            | TBD                | not yet encountered |
-| FFT          | Fast Fourier Transform                             | TBD            | TBD                | not yet encountered |
+| FFT          | Fast Fourier Transform                             | Background     | Audio Representations | defined  |
 | LFO          | Low-Frequency Oscillator                           | TBD            | TBD                | not yet encountered |
 | LR           | Learning Rate                                      | TBD            | TBD                | not yet encountered |
 | MIR          | Music Information Retrieval                        | TBD            | TBD                | not yet encountered |
-| MLP          | Multi-Layer Perceptron                             | TBD            | TBD                | not yet encountered |
+| MLP          | Multi-Layer Perceptron                             | Background     | FiLM Conditioning  | defined  |
 | NFT          | Normalising Flow Transform                         | TBD            | TBD                | not yet encountered |
 | ReLU         | Rectified Linear Unit                              | TBD            | TBD                | not yet encountered |
 | RMS          | Root Mean Square                                   | TBD            | TBD                | not yet encountered |
-| SpecAugment  | Spectrogram Augmentation                           | TBD            | TBD                | not yet encountered |
-| STFT         | Short-Time Fourier Transform                       | TBD            | TBD                | not yet encountered |
-| ViT          | Vision Transformer                                 | TBD            | TBD                | not yet encountered |
+| SpecAugment  | Spectrogram Augmentation                           | Background     | SpecAugment        | used as proper name (like ConvNeXt) |
+| STFT         | Short-Time Fourier Transform                       | Background     | Audio Representations | defined  |
+| ViT          | Vision Transformer                                 | Background     | Vision Transformers and AST | defined  |
 
 ## Notes
 - All introduction abbreviations are now defined at first use. Remaining **TBD** entries will be tracked as their sections are written.

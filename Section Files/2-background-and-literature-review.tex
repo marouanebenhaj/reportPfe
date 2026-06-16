@@ -4,7 +4,7 @@
 
 \section{BACKGROUND AND LITERATURE REVIEW}
 
-This section establishes the theoretical and empirical foundations of this work. The background subsection introduces the key concepts in sound synthesis, the formal definition of the inverse synthesis problem, and the audio representations used as model inputs. The literature review then surveys prior work, moving from early optimization-based methods to modern deep learning approaches, and identifies the gap this study addresses.
+This section builds the foundation the rest of the paper rests on. It opens with a brief history of electronic synthesizers and what they actually are --- how they generate sound, and what the physics underneath that process looks like. From there, it narrows to Vital, explaining why this particular synthesizer was chosen over others for this study. It then covers audio representations, discussing how raw audio gets turned into something a neural network can work with. The section closes with a review of related work, tracing how the field has approached the inverse synthesis problem and where the gaps still are.
 
 \subsection{Background}
 
@@ -12,15 +12,15 @@ This section establishes the theoretical and empirical foundations of this work.
 
 \subsubsubsection{A Brief History of Sound Synthesis}
 
-The development of electronic sound synthesis spans six decades and four distinct technological paradigms, each shifting both the physics of sound generation and the sonic vocabulary of popular music \cite{roads1996computer}.
+Electronic sound synthesis has been evolving for roughly six decades, and in that time it has passed through four distinct technological phases, each one reshaping not just how sound is made, but what music sounds like \cite{roads1996computer}.
 
 \par \vspace{0.3cm}
 
-\noindent \textbf{Analog synthesis (1960s--1980s).} Robert Moog's demonstration of the first voltage-controlled synthesizer at the 1964 Audio Engineering Society convention established the foundational architecture that underlies all modern synthesizers: a voltage-controlled oscillator (VCO) generating a periodic waveform, a voltage-controlled filter (VCF) shaping its spectral content, and a voltage-controlled amplifier (VCA) imposing its dynamic envelope. The Minimoog Model D (1970) condensed this modular system into a portable, self-contained instrument whose normalled signal chain --- oscillators into filter into amplifier into effects --- remains the canonical template to this day. The ARP 2600 (1971) offered a semi-modular alternative prized for its patchable flexibility. The Prophet-5 (Sequential Circuits, 1978) introduced full programmability and patch memory to a polyphonic synthesizer, allowing sounds to be saved and recalled exactly --- a capability so fundamental that it is taken for granted in every instrument that followed \cite{cook2002realsound}.
+\noindent \textbf{Analog synthesis (1960s--1980s).} The story effectively begins in 1964, when Robert Moog demonstrated the first voltage-controlled synthesizer at the Audio Engineering Society convention. The architecture he established --- a voltage-controlled oscillator (VCO) to generate a periodic waveform, a voltage-controlled filter (VCF) to shape its spectral content, and a voltage-controlled amplifier (VCA) to impose a dynamic envelope --- turned out to be remarkably durable. The Minimoog Model D (1970) compressed this modular system into a portable instrument, locking the signal chain into a fixed but highly practical path: oscillators into filter into amplifier into effects. That template is still the default in most synthesizers built today. The ARP 2600 (1971) offered a more flexible semi-modular alternative that could be patched in different configurations, while the Prophet-5 (Sequential Circuits, 1978) introduced something that now seems obvious but was genuinely new at the time: the ability to save a sound and recall it exactly \cite{cook2002realsound}.
 
 \par \vspace{0.3cm}
 
-\noindent These instruments defined the sonic palette of rock, funk, and early electronic music. Keith Emerson's Moog solo on ``Lucky Man'' by Emerson, Lake \& Palmer (1970) was one of the first widely heard synthesizer performances on a rock record. Stevie Wonder's \textit{Talking Book} (1972) and \textit{Innervisions} (1973) used the Minimoog as a primary melodic voice. Kraftwerk's ``Autobahn'' (1974) and Giorgio Moroder's sequenced Moog bassline on Donna Summer's ``I Feel Love'' (1977) established the synthesizer as a self-sufficient compositional medium. The ARP 2600 reached a different kind of cultural permanence: sound designer Ben Burtt used it to construct the voice of R2-D2 in \textit{Star Wars} (1977). The Prophet-5 contributed the thick polyphonic pads and brass stabs of synth-pop, heard across the work of Tears for Fears, Peter Gabriel, and New Order throughout the 1980s.
+\noindent These instruments shaped the sound of an entire era. Keith Emerson's Moog solo on ``Lucky Man'' (1970) gave many listeners their first encounter with a synthesizer on a rock record. Stevie Wonder's \textit{Talking Book} (1972) and \textit{Innervisions} (1973) featured the Minimoog as a lead voice throughout. Kraftwerk's ``Autobahn'' (1974) and the sequenced bassline Giorgio Moroder built for Donna Summer's ``I Feel Love'' (1977) pushed the synthesizer further, showing it could carry an entire track on its own. The ARP 2600 found a different kind of fame: sound designer Ben Burtt used it to build the voice of R2-D2 in \textit{Star Wars} (1977). And the Prophet-5's thick polyphonic pads became the defining texture of synth-pop throughout the 1980s, heard in the work of Tears for Fears, Peter Gabriel, and New Order.
 
 \par \vspace{0.3cm}
 
@@ -36,7 +36,7 @@ The development of electronic sound synthesis spans six decades and four distinc
 
 \par \vspace{0.3cm}
 
-\noindent \textbf{Software synthesis (1996--present).} Steinberg's VST (Virtual Studio Technology) standard in 1996 opened the digital audio workstation to third-party software instruments, eliminating the need for dedicated hardware. Software synthesizers could now implement any synthesis paradigm at negligible cost and with perfect parameter recall. Native Instruments, Arturia, and others recreated classic hardware digitally, free from tuning drift and with unlimited voices. Vital (Matt Tytel, 2020) represents the current endpoint of this trajectory: a free, open-source wavetable synthesizer that combines the classic analog signal chain with arbitrary wavetable oscillators, a deep modulation matrix, and programmatic parameter access via API. This evolution --- from a room-sized modular Moog to a synthesizer anyone can run on a laptop and control from a Python script --- is precisely what makes the inverse synthesis problem both tractable to study and practically relevant for working musicians.
+\noindent \textbf{Software synthesis (1996--present).} Steinberg's VST standard in 1996 opened the digital audio workstation to third-party software instruments, eliminating the need for dedicated hardware. Software synthesizers could now implement any synthesis paradigm at negligible cost and with perfect parameter recall. Native Instruments, Arturia, and others recreated classic hardware digitally, free from tuning drift and with unlimited voices. Vital (Matt Tytel, 2020) represents the current endpoint of this trajectory: a free, open-source wavetable synthesizer that combines the classic analog signal chain with arbitrary wavetable oscillators, a deep modulation matrix, and programmatic parameter access via API. This evolution --- from a room-sized modular Moog to a synthesizer anyone can run on a laptop and control from a Python script --- is precisely what makes the inverse synthesis problem both tractable to study and practically relevant for working musicians.
 
 \par \vspace{0.3cm}
 
@@ -88,7 +88,7 @@ Triangle & Odd harmonics only ($f_0, 3f_0, 5f_0, \ldots$)     & $1/n^2$     & So
 
 \par \vspace{0.3cm}
 
-\noindent \textbf{Filters (VCF).} A voltage-controlled filter shapes the spectral content of the oscillator output by attenuating energy above or below a cutoff frequency. In a low-pass filter --- the most common type in subtractive synthesis --- frequencies above the cutoff are attenuated at a slope determined by the filter order (typically 2-pole or 4-pole, corresponding to $-12$ or $-24$ dB per octave). The resonance parameter (also called $Q$) introduces a narrow peak in the filter's frequency response at the cutoff frequency; at high resonance settings, this peak amplifies a narrow spectral band dramatically. At extreme resonance values the filter enters self-oscillation, generating a near-pure sine tone independently of the oscillator input. The Moog transistor ladder filter --- a 4-pole design --- introduced a characteristic phase shift and warmth that became the defining timbral component of the analog era. The filter cutoff is expressed in semitones in Vital, rather than in Hz, reflecting the exponential relationship between MIDI pitch and frequency ($f = 440 \cdot 2^{(p-69)/12}$) and directly motivating the logarithmic normalization applied to this parameter during training.
+\noindent \textbf{Filters (VCF).} A voltage-controlled filter shapes the spectral content of the oscillator output by attenuating energy above or below a cutoff frequency. In a low-pass filter --- the most common type in subtractive synthesis --- frequencies above the cutoff are attenuated at a slope determined by the filter order (typically 2-pole or 4-pole, corresponding to $-12$ or $-24$ decibels (dB) per octave). The resonance parameter (also called $Q$) introduces a narrow peak in the filter's frequency response at the cutoff frequency; at high resonance settings, this peak amplifies a narrow spectral band dramatically. At extreme resonance values the filter enters self-oscillation, generating a near-pure sine tone independently of the oscillator input. The Moog transistor ladder filter --- a 4-pole design --- introduced a characteristic phase shift and warmth that became the defining timbral component of the analog era. The filter cutoff is expressed in semitones in Vital, rather than in Hz, reflecting the exponential relationship between MIDI pitch and frequency ($f = 440 \cdot 2^{(p-69)/12}$) and directly motivating the logarithmic normalization applied to this parameter during training.
 
 \par \vspace{0.3cm}
 
@@ -176,17 +176,60 @@ The inverse synthesis problem is formally defined as follows. Let $\mathbf{y}$ d
 
 \subsubsection{Audio Representations}
 
-The choice of input representation is critical for audio-based regression tasks. Raw waveforms carry full information but are high-dimensional and difficult to process directly with standard architectures. The Short-Time Fourier Transform (STFT) decomposes a signal into a two-dimensional time-frequency representation by applying a windowed DFT at successive frames. The magnitude of the STFT, known as the spectrogram, discards phase information but retains the spectral energy distribution over time, which is sufficient for characterizing synthesis parameters.
+A spectrogram is a visual representation of how the frequency content of a signal changes over time. To understand how it is computed, it helps to start with the Discrete Fourier Transform (DFT). Given a finite-length discrete signal $x[n]$ of length $N$, the DFT is defined as:
 
-\par \vspace{0.5cm}
+\begin{equation}
+  X[k] = \sum_{n=0}^{N-1} x[n] \cdot e^{-j2\pi kn/N}, \quad k = 0, 1, \ldots, N-1
+  \label{eq:dft}
+\end{equation}
 
-\noindent The \textit{mel spectrogram} applies a perceptually motivated frequency scale — the mel scale — which compresses high frequencies and expands low frequencies to approximate the resolution of the human auditory system. This representation has become the standard input for audio classification and regression tasks \cite{hershey2017cnn}. A key design trade-off in mel spectrogram computation is the choice of FFT window size and hop length: short windows provide high temporal resolution at the cost of frequency resolution, while long windows provide high frequency resolution at the cost of temporal smearing. For a task spanning parameters as diverse as attack transients (millisecond-scale) and harmonic structure (tens of milliseconds), no single scale is optimal for all parameters. This motivates the multi-scale representation introduced in V2 of this work, where three spectrograms computed at fine, mid, and coarse resolutions are combined into a three-channel input tensor.
+\noindent where $k$ indexes the frequency bin, corresponding to the physical frequency $f_k = k \cdot f_s / N$, with $f_s$ the sample rate. The DFT decomposes the signal into its constituent sinusoids, revealing which frequencies are present and at what amplitude.
+
+\par \vspace{0.3cm}
+
+\noindent Audio signals are non-stationary: their frequency content changes continuously over time. Applying the DFT to an entire signal yields only a global frequency average, discarding all temporal information. The Short-Time Fourier Transform (STFT) addresses this by sliding a short analysis window $w[n]$ across the signal and computing a DFT at each position \cite{allen1977stft}:
+
+\begin{equation}
+  X[m, k] = \sum_{n=0}^{N-1} x[n + mH] \cdot w[n] \cdot e^{-j2\pi kn/N}
+  \label{eq:stft_bg}
+\end{equation}
+
+\noindent where $m$ is the frame index, $H$ is the hop length, $N$ is the window size, and $w[n]$ is a tapering function --- typically a Hann window --- applied to each frame to reduce spectral leakage at the boundaries. The window size $N$ and hop length $H$ control the fundamental resolution trade-off of the STFT. A larger window captures more signal per frame, yielding finer frequency resolution ($\Delta f = f_s/N$) but coarser time resolution. A smaller window resolves fast temporal events such as percussive attacks more sharply, at the cost of frequency precision. The hop length $H$ determines how far the window advances between successive frames: a smaller hop produces a denser time axis at higher computational cost. This trade-off reflects the time-frequency uncertainty principle --- no window can achieve arbitrarily fine resolution in both dimensions simultaneously. The magnitude $|X[m,k]|$, referred to as the spectrogram, is what is stored and used as a model input; the phase is discarded, as the spectral energy distribution alone is sufficient to characterise synthesizer parameters.
+
+\par \vspace{0.3cm}
+
+\noindent Figure~\ref{fig:spectrogram_comparison} illustrates the difference between a linear spectrogram and a mel spectrogram for a bass synthesizer note rendered by Vital at MIDI note 36. The linear spectrogram packs most of the energy into the lower portion of the frequency axis, leaving the upper half nearly empty. The mel spectrogram redistributes this energy across the full vertical axis, making the harmonic structure of the note clearly visible throughout.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{images/spectrogram_comparison.png}
+\vspace{0.2cm}
+\caption{A bass synthesizer note (MIDI 36) rendered by Vital, shown as a linear-frequency spectrogram (left) and a mel spectrogram (right). The mel scale stretches the low-frequency region where most of the harmonic content resides, making the overtone structure far more visible and distributing energy more evenly across the representation.}
+\label{fig:spectrogram_comparison}
+\end{figure}
+
+\par \vspace{0.3cm}
+
+\noindent The \textit{mel scale} is a perceptually motivated frequency scale designed to reflect how humans actually hear pitch differences. The auditory system is far more sensitive to pitch changes at low frequencies than at high ones: the perceptual gap between 200~Hz and 400~Hz is much larger than that between 2{,}000~Hz and 2{,}200~Hz, even though both pairs differ by the same absolute amount. The mel scale accounts for this by compressing high frequencies and expanding low frequencies, approximating the frequency resolution of the basilar membrane in the cochlea. The conversion from Hz to mels is given by:
+
+\begin{equation}
+  m(f) = 2595 \cdot \log_{10}\!\left(1 + \frac{f}{700}\right)
+  \label{eq:mel_bg}
+\end{equation}
+
+\par \vspace{0.3cm}
+
+\noindent A \textit{mel spectrogram} applies a bank of triangular filters spaced along the mel scale to the power spectrogram, projecting the linear frequency axis onto this perceptual scale. The result is a more compact representation that emphasises the frequency regions most relevant to human perception, and has become the standard input for audio classification and regression tasks in deep learning \cite{hershey2017cnn}. In this work, mel spectrograms are computed with 128 mel bins, a frequency range of 20--12{,}000~Hz, and a power exponent of 2.0, converted to decibels before use as model input.
+
+\par \vspace{0.3cm}
+
+\noindent A key design choice in computing mel spectrograms is the Fast Fourier Transform (FFT) window size and hop length. Since this study targets parameters as diverse as envelope attack times (millisecond-scale) and oscillator wave frame position (which governs slow timbral character), no single window size is optimal across all parameters. This motivates the multi-scale representation introduced in this work, where three mel spectrograms computed at different resolutions are stacked into a three-channel input tensor --- each channel contributing complementary information to the model.
 
 \subsection{Literature Review}
 
 \subsubsection{Optimization-Based Inverse Synthesis}
 
-The earliest systematic approaches to synthesizer parameter estimation relied on iterative search. \textit{Genetic Algorithms} (GAs) encode candidate parameter vectors as individuals in a population and evolve them over successive generations using crossover and mutation operators, guided by an audio similarity fitness function \cite{walker2007audiosynthesis}. While GAs are capable of exploring non-convex parameter spaces without gradient information, they require thousands of synthesizer renders per run and do not generalize: a new search must be run from scratch for each target sound. \textit{Hill-climbing} methods — gradient-free local search — share the same limitations and are additionally prone to getting trapped in local optima in high-dimensional, non-convex spaces. These methods have been applied successfully to simple FM and subtractive synthesizers with few parameters, but scale poorly to complex VSTs like Vital.
+The earliest attempts at inverse synthesis treated the problem as a search over parameter space. GAs maintain a population of candidate solutions and evolve them using crossover and mutation, with an audio similarity score as the fitness function \cite{walker2007audiosynthesis}. They can navigate non-convex spaces without gradient information, which is useful, but at a steep cost: each search requires thousands of synthesizer renders and produces a result that is tied entirely to that one target sound. A different target means starting over. \textit{Hill-climbing}, another gradient-free local search strategy, suffers the same limitations and is also prone to getting stuck in local optima. These methods found some success on simple FM and subtractive synthesizers, where the parameter space is small and relatively well-structured, but they do not generalise to a synthesizer like Vital.
 
 \subsubsection{Deep Learning for Direct Parameter Regression}
 
@@ -198,11 +241,11 @@ The shift to deep learning reformulated inverse synthesis as a supervised regres
 
 \par \vspace{0.5cm}
 
-\noindent A common limitation of these works is their focus on FM synthesizers, which have a well-defined and mathematically tractable parameter-to-sound relationship. Wavetable synthesizers like Vital, where the oscillator timbre is determined by an arbitrary wave frame position and the interaction with a filter and modulation chain, present a more complex and less structured mapping that has received comparatively little attention.
+\noindent One thing all of these works have in common is that they target FM synthesizers. That is not a coincidence --- FM synthesis has a mathematically well-defined parameter-to-sound relationship, which makes it a natural testbed for inverse synthesis research. Wavetable synthesizers like Vital do not offer the same convenience. The timbre produced at a given wave frame position is determined by arbitrary waveform data in the table, and its interaction with the filter and modulation chain creates a high-dimensional, non-linear mapping that is substantially harder to invert. Despite being far more common in modern music production, wavetable synthesizers have received comparatively little attention from the research community.
 
 \subsubsection{Differentiable Synthesis}
 
-A parallel line of research has explored making the synthesis process itself differentiable, enabling gradient-based optimization of parameters directly in the audio domain. Engel et al. \cite{engel2020ddsp} introduced \textit{DDSP} (Differentiable Digital Signal Processing), a framework that reimplements synthesis operators — harmonic oscillators, filtered noise, reverb — as differentiable modules in a neural network computation graph. This allows training with perceptual audio losses such as the Multi-Scale Spectral (MSS) loss, which measures reconstruction quality at multiple time-frequency resolutions, and has produced compelling results for instrumental sound synthesis and timbre transfer.
+A parallel line of research has explored making the synthesis process itself differentiable, enabling gradient-based optimization of parameters directly in the audio domain. Engel et al. \cite{engel2020ddsp} introduced \textit{Differentiable Digital Signal Processing} (DDSP), a framework that reimplements synthesis operators --- harmonic oscillators, filtered noise, reverb --- as differentiable modules in a neural network computation graph. This allows training with perceptual audio losses such as the MSS loss, which measures reconstruction quality at multiple time-frequency resolutions, and has produced compelling results for instrumental sound synthesis and timbre transfer.
 
 \par \vspace{0.5cm}
 
@@ -212,28 +255,35 @@ A parallel line of research has explored making the synthesis process itself dif
 
 \noindent While these approaches are powerful, they share a fundamental requirement: the synthesizer must be re-implemented as a differentiable module. This is feasible for mathematically well-defined synthesizers (FM, additive, physical models) but is not practical for a production VST like Vital, which operates as a non-differentiable black-box plugin. Constructing a differentiable proxy of Vital would require significant additional engineering effort beyond the scope of this work. For this reason, the MSS loss is used in this study as a \textit{post-hoc evaluation metric} only — not as a training objective — and the supervised regression approach over fixed input-output pairs remains the appropriate framework.
 
-\subsubsection{Deep Learning Architectures for Audio}
+\subsubsection{Deep Learning Architectures for Audio Processing}
 
 \subsubsubsection{Convolutional Neural Networks}
-CNNs were among the first deep architectures applied to large-scale audio classification, with Hershey et al. \cite{hershey2017cnn} demonstrating strong performance on AudioSet using standard image classification networks applied to log-mel spectrograms. The key insight — that a mel spectrogram can be treated as a 2D image and processed with convolutional feature extractors — established the template for audio deep learning. He et al. \cite{he2016resnet} introduced residual connections (\textit{ResNets}), which enable training of very deep networks by providing gradient shortcuts and form the backbone of the custom CNN baseline used in this work.
+CNNs were among the first deep learning architectures applied to large-scale audio classification, with Hershey et al. \cite{hershey2017cnn} demonstrating strong performance on AudioSet using standard image classification networks applied to log-mel spectrograms. The key insight — that a mel spectrogram can be treated as a 2D image and processed with convolutional feature extractors — established the template for audio deep learning. He et al. \cite{he2016resnet} introduced residual connections (\textit{ResNets}), which enable training of very deep networks by providing gradient shortcuts and form the backbone of the custom CNN baseline used in this work.
 
 \subsubsubsection{Vision Transformers and AST}
-Dosovitskiy et al. \cite{dosovitskiy2021vit} introduced the Vision Transformer (ViT), which patches an image into non-overlapping tokens and processes them with a standard Transformer encoder \cite{vaswani2017attention}. Global self-attention allows ViT to capture long-range spatial dependencies that are difficult for local convolutions to model. Gong et al. \cite{gong2021ast} adapted ViT to audio by pre-training on AudioSet spectrograms, yielding the \textit{Audio Spectrogram Transformer} (AST). AST uses a CLS token to produce a global embedding of the spectrogram, making it well-suited as a backbone for regression tasks. The dynamic image size capability of ViT allows it to process non-square spectrograms (such as the $128 \times 224$ inputs used in this work) without requiring architectural changes.
+Dosovitskiy et al. \cite{dosovitskiy2021vit} introduced the Vision Transformer (ViT), which patches an image into non-overlapping tokens and processes them with a standard Transformer encoder \cite{vaswani2017attention}. Global self-attention allows ViT to capture long-range spatial dependencies that are difficult for local convolutions to model. Gong et al. \cite{gong2021ast} adapted ViT to audio by pre-training on AudioSet spectrograms, yielding the AST. AST uses a Classification Token (CLS) to produce a global embedding of the spectrogram, making it well-suited as a backbone for regression tasks. The dynamic image size capability of ViT allows it to process non-square spectrograms (such as the $128 \times 224$ inputs used in this work) without requiring architectural changes.
 
 \subsubsubsection{ConvNeXt}
-Liu et al. \cite{liu2022convnext} revisited the design space of convolutional networks in light of the advances introduced by vision transformers, systematically modernizing a standard ResNet by adopting inverted bottleneck blocks, depthwise convolution, larger kernels, and GELU activations. The resulting \textit{ConvNeXt} architecture matches or exceeds ViT on standard vision benchmarks while retaining the inductive biases of convolution — translation equivariance and local feature extraction — which are arguably better suited to the structured, locally-correlated spectral patterns of synthesized audio. Pellegrini et al. demonstrated that ConvNeXt pre-trained on ImageNet-22k transfers effectively to audio classification tasks, further motivating its use in this study.
+Liu et al. \cite{liu2022convnext} revisited the design space of convolutional networks in light of the advances introduced by vision transformers, systematically modernizing a standard ResNet by adopting inverted bottleneck blocks, depthwise convolution, larger kernels, and GELU activations. The resulting \textit{ConvNeXt} architecture matches or exceeds ViT on standard vision benchmarks while retaining the inductive biases of convolution — translation equivariance and local feature extraction — which are arguably better suited to the structured, locally-correlated spectral patterns of synthesized audio. Pellegrini et al. \cite{pellegrini2023convnext} demonstrated that ConvNeXt pre-trained on ImageNet-22k transfers effectively to audio classification tasks, further motivating its use in this study.
 
 \subsubsection{Sound Matching with Deep Learning: The Primary Baseline}
 
-Bruford et al. \cite{bruford2024ast} applied the Audio Spectrogram Transformer to synthesizer sound matching, training an AST model to predict the parameters of a commercial subtractive synthesizer from audio input. Their work established the strongest prior baseline for the direct regression approach to inverse synthesis using a modern pre-trained backbone. However, several aspects of their setup limit its applicability to the present work: (i) only a single mel-spectrogram scale is used as input; (ii) no pitch information is provided to the model; (iii) only the AST architecture is evaluated, with no comparison to convolutional alternatives; and (iv) the study targets a subtractive synthesizer, whereas this work addresses a wavetable synthesizer whose timbre space is substantially richer. These gaps directly motivate the research questions and contributions of this study.
+Bruford et al. \cite{bruford2024ast} applied AST to synthesizer sound matching, training an AST model to predict the parameters of a commercial subtractive synthesizer from audio input. Their work established the strongest prior baseline for the direct regression approach to inverse synthesis using a modern pre-trained backbone. However, several aspects of their setup limit its applicability to the present work: (i) only a single mel-spectrogram scale is used as input; (ii) no pitch information is provided to the model; (iii) only the AST architecture is evaluated, with no comparison to convolutional alternatives; and (iv) the study targets a subtractive synthesizer, whereas this work addresses a wavetable synthesizer whose timbre space is substantially richer. These gaps directly motivate the research questions and contributions of this study.
 
 \subsubsection{Conditioning and Data Augmentation}
 
 \subsubsubsection{FiLM Conditioning}
-Perez et al. \cite{perez2018film} introduced \textit{Feature-wise Linear Modulation} (FiLM), a conditioning mechanism in which a conditioning signal (here, MIDI pitch) is passed through a small MLP to predict a scale $\gamma$ and shift $\beta$, which are then applied element-wise to an intermediate feature map: $\tilde{\mathbf{z}} = (1 + \gamma) \odot \mathbf{z} + \beta$. Initializing the FiLM MLP to produce zero output at initialization preserves the identity transform at the start of training, ensuring stable optimization. FiLM provides a principled and expressive alternative to naive concatenation of conditioning features, as it allows the conditioning signal to multiplicatively modulate the feature representation rather than simply augmenting it additively.
+Perez et al.\ \cite{perez2018film} introduced \textit{Feature-wise Linear Modulation} (FiLM), a lightweight but expressive conditioning mechanism. The idea is straightforward: a conditioning signal --- in this work, the MIDI pitch of the rendered note --- is passed through a small Multi-Layer Perceptron (MLP) that predicts two vectors, a scale $\gamma$ and a shift $\beta$. These are then applied element-wise to an intermediate feature map $\mathbf{z}$:
+
+\begin{equation}
+  \tilde{\mathbf{z}} = (1 + \gamma) \odot \mathbf{z} + \beta
+  \label{eq:film_bg}
+\end{equation}
+
+\noindent Here, $\gamma \in \mathbb{R}^d$ rescales each feature dimension multiplicatively, and $\beta \in \mathbb{R}^d$ shifts it additively, where $d$ is the feature dimension and $\odot$ denotes element-wise multiplication. Together they allow the conditioning signal to reshape the feature representation in a learned, input-dependent way. Initialising the FiLM MLP weights to zero at the start of training ensures that $\gamma = \mathbf{0}$ and $\beta = \mathbf{0}$ initially, so the transform reduces to the identity and training begins from a stable baseline. This is a more expressive alternative to simply concatenating the pitch value onto the feature vector, which can only add information additively rather than modulating what is already there.
 
 \subsubsubsection{SpecAugment}
-Park et al. \cite{park2019specaugment} introduced \textit{SpecAugment}, a simple data augmentation strategy for mel spectrograms that applies random masking along the time and frequency axes. By forcing the model to predict from partially occluded representations, SpecAugment acts as a structured regularizer and has been shown to substantially reduce overfitting in audio models. In this work, SpecAugment is applied during V3 training to complement the increased dataset size and further improve generalization.
+Park et al.\ \cite{park2019specaugment} introduced \textit{SpecAugment}, a simple augmentation technique that works by randomly blanking out rectangular regions of the mel spectrogram --- strips along the time axis, strips along the frequency axis, or both. The result is that the model never sees the same input twice in quite the same way, and learns not to depend on any particular time slice or frequency band being present. It is essentially dropout for spectrograms, and it has proven effective at reducing overfitting across a range of audio tasks. In this work it is applied during V3 training, where the larger dataset makes it possible to use stronger regularisation without starving the model of signal.
 
 \subsection{Summary and Research Gap}
 
