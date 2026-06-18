@@ -258,13 +258,75 @@ A parallel line of research has explored making the synthesis process itself dif
 \subsubsection{Deep Learning Architectures for Audio Processing}
 
 \subsubsubsection{Convolutional Neural Networks}
-CNNs were among the first deep learning architectures applied to large-scale audio classification, with Hershey et al. \cite{hershey2017cnn} demonstrating strong performance on AudioSet using standard image classification networks applied to log-mel spectrograms. The key insight — that a mel spectrogram can be treated as a 2D image and processed with convolutional feature extractors — established the template for audio deep learning. He et al. \cite{he2016resnet} introduced residual connections (\textit{ResNets}), which enable training of very deep networks by providing gradient shortcuts and form the backbone of the custom CNN baseline used in this work.
+CNNs were among the first deep learning architectures applied to large-scale audio classification. Hershey et al.\ \cite{hershey2017cnn} demonstrated strong performance on AudioSet by applying standard image classification networks directly to log-mel spectrograms, establishing the key insight that a mel spectrogram can be treated as a 2D image and processed with convolutional feature extractors. This framing became the dominant template for audio deep learning.
+
+\par \vspace{0.3cm}
+
+\noindent A central challenge in training deep convolutional networks is the degradation problem: as network depth increases beyond a certain point, accuracy saturates and then degrades, even on the training set, not due to overfitting but due to the difficulty of optimizing very deep networks with standard backpropagation. He et al.\ \cite{he2016resnet} identified this problem and addressed it with \textit{deep residual learning}. Rather than training a stack of layers to directly learn a desired mapping $\mathcal{H}(\mathbf{x})$, the layers are reformulated to learn the \textit{residual} $\mathcal{F}(\mathbf{x}) = \mathcal{H}(\mathbf{x}) - \mathbf{x}$, so that the overall block computes:
+
+\begin{equation}
+  \mathbf{y} = \mathcal{F}(\mathbf{x},\, \{W_i\}) + \mathbf{x}
+  \label{eq:residual}
+\end{equation}
+
+\noindent where $\mathbf{x}$ is the block input, $\mathbf{y}$ is its output, and $\mathcal{F}(\mathbf{x}, \{W_i\})$ is the residual function learned by the stacked layers. The identity shortcut connection $+\,\mathbf{x}$ adds the input directly to the output, bypassing the nonlinear transformations. This connection costs no additional parameters and introduces no computational overhead; it simply provides a gradient highway through which error signals can flow directly to earlier layers without attenuation. If the optimal mapping is close to the identity, it is much easier for the network to drive $\mathcal{F}(\mathbf{x})$ toward zero than to learn the identity through a stack of nonlinear layers.
+
+\par \vspace{0.3cm}
+
+\noindent He et al.\ defined two block designs. The \textit{basic block} stacks two $3\!\times\!3$ convolutions with Batch Normalization and ReLU, used in shallower variants (ResNet-18, ResNet-34). The \textit{bottleneck block} uses a $1\!\times\!1$ convolution to reduce channels, a $3\!\times\!3$ convolution in the reduced space, and a second $1\!\times\!1$ convolution to restore the channel dimension, reducing computational cost while increasing depth in ResNet-50, ResNet-101, and ResNet-152. With residual connections, He et al.\ trained networks up to 152 layers deep and won the ILSVRC 2015 image classification challenge by a large margin. Residual connections have since become a near-universal component of deep learning architectures, including the Transformer encoder blocks described in the following subsections. Figure~\ref{fig:resnet_block} shows the residual block as presented in the original paper.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.55\linewidth]{images/resnet_block.png}
+\vspace{0.2cm}
+\caption{Residual learning building block from He et al.\ \cite{he2016resnet}. The shortcut connection bypasses two weight layers and adds the block input $\mathbf{x}$ directly to the output, allowing the layers to learn a residual mapping $\mathcal{F}(\mathbf{x})$ rather than the full desired mapping $\mathcal{H}(\mathbf{x})$.}
+\label{fig:resnet_block}
+\end{figure}
 
 \subsubsubsection{Vision Transformers and AST}
-Dosovitskiy et al. \cite{dosovitskiy2021vit} introduced the Vision Transformer (ViT), which patches an image into non-overlapping tokens and processes them with a standard Transformer encoder \cite{vaswani2017attention}. Global self-attention allows ViT to capture long-range spatial dependencies that are difficult for local convolutions to model. Gong et al. \cite{gong2021ast} adapted ViT to audio by pre-training on AudioSet spectrograms, yielding the AST. AST uses a Classification Token (CLS) to produce a global embedding of the spectrogram, making it well-suited as a backbone for regression tasks. The dynamic image size capability of ViT allows it to process non-square spectrograms (such as the $128 \times 224$ inputs used in this work) without requiring architectural changes.
+Dosovitskiy et al.\ \cite{dosovitskiy2021vit} introduced the Vision Transformer (ViT), which departs from the convolutional paradigm by processing an image as a flat sequence of fixed-size non-overlapping patch tokens. The input image of spatial dimensions $H \times W$ is divided into $P \times P$ patches, each flattened and linearly projected to a $d$-dimensional embedding, producing a sequence of $N = HW/P^2$ tokens. A learnable Classification (CLS) token is prepended, and learned positional embeddings are added to every token to encode spatial position. The resulting sequence of $N + 1$ tokens is passed through $L$ stacked Transformer encoder blocks \cite{vaswani2017attention}. Each block applies multi-head self-attention (MHSA) followed by a position-wise feed-forward network (FFN), with Layer Normalization before each sublayer and residual connections throughout. The self-attention operation computes a weighted sum over all tokens in the sequence:
+
+\begin{equation}
+  \text{Attention}(Q, K, V) = \text{softmax}\!\left(\frac{QK^\top}{\sqrt{d_k}}\right)V
+  \label{eq:selfattn}
+\end{equation}
+
+\noindent where $Q$, $K$, and $V$ are learned linear projections of the input tokens and $d_k$ is the key dimension. Unlike convolutions, which share weights locally and process each neighbourhood independently, self-attention lets every token attend to every other token in a single operation, capturing global spatial dependencies that local receptive fields cannot reach. ViT was pre-trained on large image datasets (JFT-300M, ImageNet-21k) and demonstrated that a pure Transformer, with no convolutional inductive bias, can match or exceed convolutional networks on standard image recognition benchmarks when trained at sufficient scale. Figure~\ref{fig:vit_arch} shows the ViT architecture as presented in the original paper.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.88\linewidth]{images/vit_architecture.png}
+\vspace{0.2cm}
+\caption{Architecture of the Vision Transformer (ViT) \cite{dosovitskiy2021vit}. The input image is split into fixed-size $P \times P$ patches, each linearly projected to a token embedding. A CLS token and positional embeddings are added before the sequence is processed by a standard Transformer encoder. The CLS token output is used for downstream prediction.}
+\label{fig:vit_arch}
+\end{figure}
+
+\par \vspace{0.3cm}
+
+\noindent Gong et al.\ \cite{gong2021ast} adapted ViT directly to audio by treating the mel spectrogram as a 2D image. The spectrogram is split into $16 \times 16$ patches, which are linearly projected and fed to a ViT encoder in the same manner as image patches. Since spectrograms have a different aspect ratio and resolution than the ImageNet images used to pre-train ViT, the 2D positional embeddings are bilinearly interpolated to match the input dimensions. The model is then fine-tuned on AudioSet, transferring visual pre-training features to the audio domain. The CLS token from the final encoder layer yields a global audio embedding that is passed to a task-specific head. AST achieved state-of-the-art results on AudioSet and several other audio classification benchmarks, demonstrating that a Transformer with no audio-specific inductive bias generalises effectively to spectrograms when initialized from strong visual pre-training. Figure~\ref{fig:ast_arch} shows the AST pipeline as presented in the original paper.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.88\linewidth]{images/ast_architecture.png}
+\vspace{0.2cm}
+\caption{Architecture of the Audio Spectrogram Transformer (AST) \cite{gong2021ast}. A mel spectrogram is divided into $16 \times 16$ overlapping patches, linearly embedded, and processed by a ViT encoder pre-trained on ImageNet. The CLS token from the final encoder layer is used as the global audio representation for downstream classification or regression.}
+\label{fig:ast_arch}
+\end{figure}
 
 \subsubsubsection{ConvNeXt}
-Liu et al. \cite{liu2022convnext} revisited the design space of convolutional networks in light of the advances introduced by vision transformers, systematically modernizing a standard ResNet by adopting inverted bottleneck blocks, depthwise convolution, larger kernels, and GELU activations. The resulting \textit{ConvNeXt} architecture matches or exceeds ViT on standard vision benchmarks while retaining the inductive biases of convolution — translation equivariance and local feature extraction — which are arguably better suited to the structured, locally-correlated spectral patterns of synthesized audio. Pellegrini et al. \cite{pellegrini2023convnext} demonstrated that ConvNeXt pre-trained on ImageNet-22k transfers effectively to audio classification tasks, further motivating its use in this study.
+Liu et al.\ \cite{liu2022convnext} revisited the design space of standard convolutional networks and systematically modernized a ResNet-50 through a sequence of five targeted modifications, each motivated by design choices that make vision Transformers effective, resulting in a purely convolutional architecture that matches or exceeds ViT on standard benchmarks. \textbf{(i) Depthwise $7\!\times\!7$ convolution:} the standard $3\!\times\!3$ convolution is replaced with a $7\!\times\!7$ depthwise convolution, which processes each channel independently and enlarges the receptive field at a lower parameter cost, analogous to the large attention window in Transformers. \textbf{(ii) Inverted bottleneck:} the channel dimension is first expanded to $4C$ by a pointwise linear layer, the depthwise convolution operates in this wider intermediate space, and a second pointwise layer projects back to $C$, directly mirroring the FFN design of a Transformer encoder block. \textbf{(iii) Layer Normalization} replaces Batch Normalization, removing dependence on batch statistics and improving training stability across a wider range of settings. \textbf{(iv) GELU} replaces ReLU, aligning the activation function with Transformer practice. \textbf{(v) Fewer activations and normalization layers:} each block uses a single activation and a single normalization layer, following the Transformer convention of one nonlinearity per sublayer rather than the multiple activations found in a ResNet bottleneck.
+
+\par \vspace{0.3cm}
+
+\noindent The overall ConvNeXt architecture follows a hierarchical four-stage design inherited from ResNets. A patchify stem consisting of a stride-4 $4\!\times\!4$ convolution maps the input to an initial feature map at $1/4$ the original spatial resolution. Four stages then process features at progressively downsampled spatial resolutions and increasing channel widths $(C,\,2C,\,4C,\,8C)$. For \textit{ConvNeXt-Tiny}, $C = 96$ and the stages contain $(3, 3, 9, 3)$ blocks, yielding approximately 28~M parameters; for \textit{ConvNeXt-Base}, $C = 128$ with $(3, 3, 27, 3)$ blocks, yielding approximately 89~M parameters. Global average pooling over the final feature map produces a fixed-length embedding passed to the task head. Pre-trained on ImageNet-22k, ConvNeXt transfers effectively to a wide range of downstream tasks, including audio classification when applied to mel spectrograms \cite{pellegrini2023convnext}. Figure~\ref{fig:convnext_block} shows the block design comparison as presented in the original paper.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.88\linewidth]{images/convnext_block.png}
+\vspace{0.2cm}
+\caption{ConvNeXt block design as presented in Liu et al.\ \cite{liu2022convnext}. Starting from a standard ResNet bottleneck block (left), a sequence of five design changes --- depthwise $7\!\times\!7$ convolution, inverted bottleneck, Layer Normalization, GELU activation, and reduced normalization layers --- produces the final ConvNeXt block (right), which mirrors the structure of a Transformer FFN while retaining convolutional inductive biases.}
+\label{fig:convnext_block}
+\end{figure}
 
 \subsubsection{Sound Matching with Deep Learning: The Primary Baseline}
 
