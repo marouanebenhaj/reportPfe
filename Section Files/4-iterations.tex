@@ -51,38 +51,47 @@ The data generation pipeline transforms raw synthesizer parameter configurations
 % ─────────────────────────────────────────────────────────
 \subsubsection{Step 1: Parameter Extraction from Vital}
 
-All 16 target parameters are enumerated programmatically from Vital via the Pedalboard Python library, which exposes the synthesizer's internal parameter table. For each parameter, the extraction records its name, internal plugin index, valid range $[x^{\min}_k,\, x^{\max}_k]$, and discretization information where applicable. Seven parameters — the four envelope times, the filter cutoff, the unison voice count, and the oscillator 2 transpose — are internally quantized by Vital to a finite set of valid discrete values. During preset generation, any continuously sampled value for these parameters is snapped to the nearest valid discrete point. The extracted ranges and discrete value tables are stored as JSON reference files and used throughout the pipeline to ensure that all generated presets are valid within Vital's internal representation. Table~\ref{tab:parameters} provides the complete listing of all 16 parameters in their prediction order, together with their group assignment, the normalization applied to raw Vital values before min-max scaling to $[0,1]$, whether the parameter is internally discretized by Vital, and the loss weight assigned to each group during training (see Equation~\ref{eq:weighted_loss}).
+All 16 target parameters are enumerated programmatically from Vital via the Pedalboard Python library, which exposes the synthesizer's internal parameter table. For each parameter, the extraction records its name, internal plugin index, valid range $[x^{\min}_k,\, x^{\max}_k]$, and discretization information where applicable. While all parameters are exposed with continuous-looking ranges, Vital internally quantizes seven of them to a finite set of valid discrete values. Although these parameters may appear continuous from outside the synthesizer, Vital's internal implementation restricts them to specific grids:
+
+\begin{itemize}
+    \item \textbf{Envelope times} (\texttt{env1\_attack}, \texttt{env1\_decay}, \texttt{env2\_attack}, \texttt{env2\_decay}): Despite being specified in seconds over a wide range, all four envelope times are mapped to 1{,}001 discrete steps on a logarithmic time grid. This quantization reflects the resolution of Vital's internal envelope generator, meaning that many nominally distinct floating-point time values collapse to the same rendered behaviour.
+
+    \item \textbf{Filter cutoff} (\texttt{filter1\_cutoff}): Expressed in semitones over a broad pitch range, the filter cutoff is internally quantized to 1{,}001 discrete frequency values. Although the parameter appears continuous, Vital's filter implementation operates on a fixed frequency grid of that resolution.
+
+    \item \textbf{Unison voice count} (\texttt{osc1\_unison\_voices}): Controls how many detuned copies of oscillator 1 are layered to produce a thicker sound. This parameter is inherently discrete, as a fractional number of voices has no physical meaning within the synthesizer engine.
+
+    \item \textbf{Oscillator 2 transpose} (\texttt{osc2\_transpose}): Sets the pitch offset of oscillator 2 relative to the played note. This parameter is inherently discrete by musical convention, taking only integer semitone values.
+\end{itemize}
+
+The extracted ranges and discrete value tables are stored as JavaScript Object Notation (JSON) reference files and used throughout the pipeline. Table~\ref{tab:parameters} lists all 16 parameters in their prediction order, along with their discrete status and a brief description.
 
 \begin{table}[H]
 \centering
 \renewcommand{\arraystretch}{1.35}
-\begin{tabular}{clp{2.2cm}p{2.4cm}cc}
+\begin{tabular}{clcp{6.5cm}}
 \hline
-\textbf{\#} & \textbf{Parameter} & \textbf{Group} & \textbf{Normalisation} & \textbf{Discrete} & \textbf{Loss wt.} \\
+\textbf{\#} & \textbf{Parameter} & \textbf{Discrete} & \textbf{Description} \\
 \hline
-0  & \texttt{osc1\_wave\_frame}    & Oscillator & Linear        & ---  & $2\times$ \\
-1  & \texttt{osc1\_level}          & Oscillator & Linear        & ---  & $2\times$ \\
-2  & \texttt{osc1\_unison\_voices} & Oscillator & Linear        & Yes  & $2\times$ \\
-3  & \texttt{osc1\_unison\_detune} & Oscillator & Linear        & ---  & $2\times$ \\
-4  & \texttt{osc2\_wave\_frame}    & Oscillator & Linear        & ---  & $2\times$ \\
-5  & \texttt{osc2\_level}          & Oscillator & Linear        & ---  & $2\times$ \\
-6  & \texttt{osc2\_transpose}      & Oscillator & Linear        & Yes  & $2\times$ \\
-\hline
-7  & \texttt{env1\_attack}         & Envelope   & $\log_{10}$   & Yes  & $1\times$ \\
-8  & \texttt{env1\_decay}          & Envelope   & $\log_{10}$   & Yes  & $1\times$ \\
-9  & \texttt{env2\_attack}         & Envelope   & $\log_{10}$   & Yes  & $1\times$ \\
-10 & \texttt{env2\_decay}          & Envelope   & $\log_{10}$   & Yes  & $1\times$ \\
-\hline
-11 & \texttt{filter1\_cutoff}      & Filter     & $\log_{10}$   & Yes  & $1\times$ \\
-12 & \texttt{filter1\_resonance}   & Filter     & Linear        & ---  & $1\times$ \\
-\hline
-13 & \texttt{sample\_level}        & Misc       & Linear        & ---  & $1\times$ \\
-14 & \texttt{mod1\_amount}         & Misc       & Linear        & ---  & $1\times$ \\
-15 & \texttt{reverb\_mix}          & Misc       & Linear        & ---  & $1\times$ \\
+0  & \texttt{osc1\_wave\_frame}    & ---  & Wavetable position of oscillator 1, controlling the spectral shape of its output waveform. \\
+1  & \texttt{osc1\_level}          & ---  & Output amplitude of oscillator 1. \\
+2  & \texttt{osc1\_unison\_voices} & Yes  & Number of detuned voices layered by oscillator 1 to produce a thicker sound. \\
+3  & \texttt{osc1\_unison\_detune} & ---  & Pitch spread between the unison voices of oscillator 1. \\
+4  & \texttt{osc2\_wave\_frame}    & ---  & Wavetable position of oscillator 2, controlling its spectral character. \\
+5  & \texttt{osc2\_level}          & ---  & Output amplitude of oscillator 2. \\
+6  & \texttt{osc2\_transpose}      & Yes  & Pitch offset of oscillator 2 relative to the played note, in integer semitone steps. \\
+7  & \texttt{env1\_attack}         & Yes  & Attack time of the amplitude envelope (Envelope 1). \\
+8  & \texttt{env1\_decay}          & Yes  & Decay time of the amplitude envelope (Envelope 1). \\
+9  & \texttt{env2\_attack}         & Yes  & Attack time of the filter envelope (Envelope 2). \\
+10 & \texttt{env2\_decay}          & Yes  & Decay time of the filter envelope (Envelope 2). \\
+11 & \texttt{filter1\_cutoff}      & Yes  & Low-pass filter cutoff frequency, specified in semitones. \\
+12 & \texttt{filter1\_resonance}   & ---  & Resonance (Q factor) of the low-pass filter. \\
+13 & \texttt{sample\_level}        & ---  & Output amplitude of the noise/sample oscillator. \\
+14 & \texttt{mod1\_amount}         & ---  & Depth of filter envelope modulation applied to the filter cutoff. \\
+15 & \texttt{reverb\_mix}          & ---  & Wet/dry mix of the global reverb effect. \\
 \hline
 \end{tabular}
 \vspace{0.3cm}
-\caption{All 16 synthesizer parameters in prediction order (index 0--15). \textit{Normalisation} is the transform applied to raw Vital values before min-max scaling to $[0,1]$: envelope times and filter cutoff span several orders of magnitude and are $\log_{10}$-transformed first. \textit{Discrete} indicates parameters that Vital internally quantizes to a finite grid; sampled values are snapped to the nearest valid point during preset generation. \textit{Loss wt.} is the group weighting applied in the training objective. Sustain and release are excluded as both stages are unobservable in a fixed 4-second render with no note-off event.}
+\caption{All 16 synthesizer parameters extracted from Vital, listed in prediction order (index 0--15). \textit{Discrete} indicates parameters that Vital internally quantizes to a finite set of valid values despite appearing continuous from outside the synthesizer. Sustain and release are excluded as both are unobservable in a fixed 4-second render with no note-off event.}
 \label{tab:parameters}
 \end{table}
 
@@ -94,25 +103,25 @@ A naive uniform sampling of the 16-dimensional parameter space produces predomin
 \begin{table}[H]
 \centering
 \renewcommand{\arraystretch}{1.3}
-\begin{tabular}{lcccc}
+\begin{tabular}{lcccp{4.5cm}}
 \hline
-\textbf{Timbre} & \textbf{Min MIDI} & \textbf{Max MIDI} & \textbf{Notes} & \textbf{Presets} \\
+\textbf{Timbre} & \textbf{Min MIDI} & \textbf{Max MIDI} & \textbf{Presets} & \textbf{Sound characteristics} \\
 \hline
-bass   & C0 (12) & C3 (48) & Low register, slow envelope      & 6{,}000  \\
-lead   & C3 (48) & C6 (84) & Mid-high register, bright timbre  & 6{,}000  \\
-pad    & C2 (36) & C5 (72) & Sustained, slow attack            & 6{,}000  \\
-percs  & C1 (24) & C6 (84) & Short attack, noise-heavy         & 6{,}000  \\
-random & C0 (12) & C6 (84) & Unconstrained full range          & 20{,}000 \\
+bass   & C0 (12) & C3 (48) & 6{,}000  & Low register; slow amplitude envelope; sub-bass and bass tones. \\
+lead   & C3 (48) & C6 (84) & 6{,}000  & Mid-to-high register; bright, cutting timbre suitable for melodic lines. \\
+pad    & C2 (36) & C5 (72) & 6{,}000  & Sustained chordal texture; slow attack to emphasise the hold phase. \\
+percs  & C1 (24) & C6 (84) & 6{,}000  & Very short attack; noise/sample oscillator prominent; percussive hits. \\
+random & C0 (12) & C6 (84) & 20{,}000 & Unconstrained sampling across the full parameter and pitch range. \\
 \hline
-\textbf{Total} & & & & \textbf{44{,}000} \\
+\textbf{Total} & & & \textbf{44{,}000} & \\
 \hline
 \end{tabular}
 \vspace{0.3cm}
-\caption{Timbre categories used for preset generation, with their MIDI pitch ranges and preset counts.}
+\caption{Timbre categories used for preset generation, with their MIDI pitch ranges, preset counts, and target sound characteristics.}
 \label{tab:timbre_categories}
 \end{table}
 
-\noindent For each timbre, a JSON range file defines per-parameter minimum and maximum bounds that enforce the target timbre. For example, the \texttt{percs} category enforces a very short amplitude attack ($\leq 10$ ms), a moderate decay range, and a high noise/sample oscillator level, ensuring that any random draw within those bounds produces a percussive-sounding result. Each preset is stored as a record in a per-timbre JSONL file, with checkpoint-aware deduplication allowing interrupted generation runs to be safely resumed.
+\noindent Each timbre category is governed by a dedicated JSON range file that narrows the sampling bounds of the 16 parameters to a musically coherent region. Within those bounds, parameter values are drawn at random, so the resulting sounds vary widely in character while still belonging recognisably to the target category. The \texttt{percs} category, for instance, caps the amplitude attack at 10\,ms, constrains the decay to a moderate range, and keeps the noise/sample oscillator level high — guaranteeing that every randomly drawn preset produces a percussive hit regardless of the exact values selected for the remaining parameters. Once generated, each preset is appended as a record to a per-timbre JSON Lines (JSONL) file. The generation loop is checkpoint-aware: a hash of each parameter vector is checked against previously written entries, so an interrupted run can be safely resumed from where it left off without introducing duplicates.
 
 % ─────────────────────────────────────────────────────────
 \subsubsection{Step 3: Audio Rendering}
@@ -128,7 +137,10 @@ In V1 and V2, each preset is rendered at a single MIDI pitch sampled uniformly f
 Certain extreme parameter combinations cause Vital to produce no audible output — for example, when both oscillators are muted and the sample level is zero. These silent clips are detected and removed using a hybrid energy-based rule applied to each rendered WAV file.
 
 \par \vspace{0.3cm}
-The audio signal $x(n)$ is divided into short frames of length $L$ with hop $H$. The RMS energy of the $i$-th frame is computed as:
+\noindent A straightforward approach would compute the mean energy of the full 4-second clip and discard anything below a fixed threshold. This fails for percussive and transient-heavy sounds: a stab, a drum hit, or a pluck concentrates nearly all of its energy in the first 10--100~ms of the clip, leaving the remaining 3.9+ seconds close to silence. The clip-level mean energy for such sounds can fall well below any reasonable threshold even when the sound itself is perfectly audible and musically useful. The detector must therefore distinguish between a clip that is uniformly quiet throughout and one that is quiet on average but contains a brief burst of high energy. The hybrid rule introduced below addresses this by combining an activity-based criterion, which checks what fraction of the clip has meaningful energy, with a peak-based criterion, which checks whether any moment in the clip reaches a minimum loudness level.
+
+\par \vspace{0.3cm}
+The audio signal $x(n)$ is divided into short frames of length $L$ with hop $H$. The Root Mean Square (RMS) energy of the $i$-th frame is computed as:
 
 \begin{equation}
 E_i = \sqrt{\frac{1}{L} \sum_{n=0}^{L-1} x^2(iH + n)}
@@ -150,11 +162,11 @@ R = \frac{1}{N_f} \sum_{i=1}^{N_f} \mathbf{1}\!\left[E_i^{\text{dB}} > \theta_{\
 \end{equation}
 
 \begin{equation}
-P^{\text{dB}} = 20 \cdot \log_{10}\!\left(\max_{n}\,|x(n)|\right)
+P^{\text{dB}} = \max\!\left(\max_{i}\, E_i^{\text{dB}},\;\; 20 \cdot \log_{10}\!\left(\max_{n}\,|x(n)|\right)\right)
 \label{eq:peak_db}
 \end{equation}
 
-\noindent where $R$ is the \textit{active ratio} — the fraction of frames exceeding the RMS threshold $\theta_{\text{rms}}$ — and $P^{\text{dB}}$ is the peak amplitude in decibels. A clip is retained if either condition is satisfied:
+\noindent where $R$ is the \textit{active ratio} — the fraction of frames exceeding the RMS threshold $\theta_{\text{rms}}$ — and $P^{\text{dB}}$ is the peak energy measure, defined as the maximum of the highest frame RMS in decibels and the peak sample amplitude in decibels. Taking the maximum of both is equivalent to flagging a clip as non-silent if either measure exceeds the threshold, which is how the detector is implemented. A clip is retained if either condition is satisfied:
 
 \begin{equation}
 \text{keep} \;\Leftrightarrow\; \left(R > \rho_{\min}\right) \;\vee\; \left(P^{\text{dB}} > \theta_{\text{peak}}\right)
@@ -233,6 +245,16 @@ Coarse & 8{,}192 & 2{,}048 & $\approx$87      & Harmonic structure, pitch conten
 \caption{Multi-scale mel spectrogram configurations used in V2 and V3.}
 \label{tab:mel_scales}
 \end{table}
+
+Figure~\ref{fig:multiscale_mel_example} shows the three spectrograms computed from the same bass note (MIDI 36) rendered by Vital. At the fine scale, the rapid amplitude modulation caused by the unison voices is clearly visible along the time axis. At the mid scale, the overall envelope shape and timbral balance come into focus. At the coarse scale, the individual harmonics of the note resolve into distinct horizontal bands, making pitch-related information far more legible. Each scale therefore contributes information that the others cannot provide, which is the core motivation for stacking them.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{images/multiscale_mel_example.png}
+\vspace{0.2cm}
+\caption{Multi-scale mel spectrograms of a Vital bass note (MIDI 36) at fine ($n_{\text{fft}}=512$), mid ($n_{\text{fft}}=2{,}048$), and coarse ($n_{\text{fft}}=8{,}192$) resolutions. The fine scale resolves fast temporal events; the mid scale shows envelope shape and spectral balance; the coarse scale reveals the harmonic series structure. All three are padded or truncated to 224 time frames before stacking.}
+\label{fig:multiscale_mel_example}
+\end{figure}
 
 \noindent The three spectrograms are stacked along the channel dimension to form a three-channel input tensor of shape $(3, 128, 224)$, as illustrated in Figure~\ref{fig:multiscale_stack}. This is directly compatible with the three-channel (RGB) first-layer weight initialization of ConvNeXt and ViT backbones.
 
@@ -487,7 +509,7 @@ All six V1 configurations share the same three-layer regression head applied to 
 where $W_1 \in \mathbb{R}^{256 \times d_{\text{fused}}}$, $W_2 \in \mathbb{R}^{128 \times 256}$, $W_3 \in \mathbb{R}^{16 \times 128}$, and $\sigma$ is the element-wise Sigmoid function. The Sigmoid output bounds all predictions to $[0, 1]$, matching the normalised parameter range.
 
 \paragraph{5) Training Protocol}
-All models are trained with the AdamW optimiser (weight decay $10^{-4}$) for 100 epochs per fold. The batch size and base learning rate are architecture-dependent: the lightweight SynthParamNet CNN uses a larger batch size and higher learning rate, while the pre-trained ConvNeXt-tiny and AST-small backbones use smaller batch sizes and lower learning rates suited to fine-tuning large pre-trained models. For pre-trained backbones (AST, ConvNeXt), a differential learning rate is applied: the backbone parameters are updated at $0.1\times$ the head learning rate to preserve the ImageNet-22k representations during early fine-tuning. A cosine-annealing OneCycleLR scheduler with $\text{pct\_start}=0.3$ is used to warm up the learning rate over the first 30\% of training before annealing. Automatic mixed precision (AMP) training is enabled on the NVIDIA RTX 4090 with gradient clipping at $\text{max\_norm}=1.0$. The training loss is the standard (unweighted) SmoothL1 loss with $\beta=0.02$.
+All models are trained with the Adaptive Moment Estimation with Weight Decay (AdamW) optimiser (weight decay $10^{-4}$) for 100 epochs per fold. The batch size and base learning rate are architecture-dependent: the lightweight SynthParamNet CNN uses a larger batch size and higher learning rate, while the pre-trained ConvNeXt-tiny and AST-small backbones use smaller batch sizes and lower learning rates suited to fine-tuning large pre-trained models. For pre-trained backbones (AST, ConvNeXt), a differential learning rate is applied: the backbone parameters are updated at $0.1\times$ the head learning rate to preserve the ImageNet-22k representations during early fine-tuning. A cosine-annealing OneCycleLR scheduler with $\text{pct\_start}=0.3$ is used to warm up the learning rate over the first 30\% of training before annealing. AMP training is enabled on the NVIDIA RTX 4090 with gradient clipping at $\text{max\_norm}=1.0$. The training loss is the standard (unweighted) SmoothL1 loss with $\beta=0.02$.
 
 \paragraph{6) Five-Fold Cross-Validation}
 Five independent stratified splits are generated from the V1/V2 dataset of $\approx 42{,}520$ samples using the timbre $\times$ octave bucket key (Equation~\ref{eq:bucket}). Each split produces a training set of $\approx 34{,}000$ samples and a test set of $\approx 4{,}252$ samples. For each fold, training is performed on the training partition and the model checkpoint with the lowest validation MAE is retained. Test MAE is reported as mean $\pm$ standard deviation across the five splits.
