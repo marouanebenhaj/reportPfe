@@ -129,7 +129,7 @@ random & C0 (12) & C6 (84) & 20{,}000 & Unconstrained sampling across the full p
 Each preset is rendered to a 44.1 kHz mono WAV file via Pedalboard, which loads Vital as a VST3 plugin, sets all 16 parameters programmatically, and triggers a MIDI note-on event without a corresponding note-off. The clip duration is fixed at 4 seconds. The absence of a note-off event means that the release stage of the amplitude envelope is never triggered, which is why release is excluded from the 16 studied parameters. The sustain stage is similarly excluded, as the envelope decay is set long enough relative to the 4-second clip to produce effectively sustained sounds without requiring an explicit sustain parameter.
 
 \par \vspace{0.3cm}
-In V1 and V2, each preset is rendered at a single MIDI pitch sampled uniformly from the timbre's valid range. In V3, each preset is rendered at three fixed MIDI pitches chosen to cover the low, mid, and high registers of the timbre's range, expanding the dataset approximately three-fold. A SHA-256 hash of the parameter vector and MIDI pitch is used to track already-rendered presets, enabling safe resumption of interrupted runs. Rendered audio paths and ground-truth parameters are written to a combined JSONL file with one record per clip.
+In V1 and V2, each preset is rendered at a single MIDI pitch sampled uniformly from the timbre's valid range. In V3, each preset is re-rendered at up to three fixed MIDI pitches per timbre (Table~\ref{tab:v3_midi}), selected to cover the low, mid, and high registers of the timbre's range. A hash keyed on the (sorted preset parameters, MIDI note) pair is used to detect already-rendered combinations: if the V1/V2 random note coincides with one of the three fixed notes, that render already exists and is skipped, and only the remaining two fixed notes are rendered; if the V1/V2 note differs from all three fixed notes, all three are rendered. Each preset therefore ends up with either three clips (if the V1 note matched one fixed note) or four clips (if it matched none), with four being the typical outcome since the random V1 note rarely coincides with the fixed schedule. The same hash mechanism enables safe resumption of interrupted runs. Rendered audio paths and ground-truth parameters are written to a combined JSONL file with one record per clip.
 
 % ─────────────────────────────────────────────────────────
 \subsubsection{Step 4: Silence Filtering}
@@ -301,34 +301,139 @@ Figure~\ref{fig:multiscale_mel_example} shows the three spectrograms computed fr
 \subsubsection{Step 6: Dataset Splitting and Normalization}
 
 \subsubsubsection{Stratified Split}
-To ensure that each data split contains a representative distribution of both timbre categories and pitch registers, a stratified splitting strategy is employed. Each sample is assigned a bucket key:
+
+A purely random partition would not guarantee that each set reflects the full musical diversity of the dataset. By chance, all bass presets could land predominantly in the training set while the test set is dominated by pad or random presets, or an entire pitch register could be absent from validation entirely. Under such a split, the reported MAE would partly reflect a distribution mismatch rather than a genuine measure of model generalisation. The stratified split prevents this by treating the joint timbre-and-pitch-register label as a stratum and allocating samples from each stratum in the target 80\,/\,10\,/\,10 ratio independently, ensuring that every timbre category and every pitch register appears in proportional numbers across all three partitions. This guarantees that the evaluation sets are musically representative: the model is tested on the same joint distribution of sounds it was trained on, so MAE differences between configurations reflect differences in model quality rather than accidents of split composition.
+
+Each sample is assigned a bucket key combining its timbre label and the octave of its MIDI note:
 
 \begin{equation}
 \text{bucket} = \left(\text{timbre},\; \left\lfloor \frac{\text{midi\_note}}{12} \right\rfloor\right)
 \label{eq:bucket}
 \end{equation}
 
-\noindent Within each bucket, samples are deterministically shuffled using a seeded random number generator and then divided in an 80 / 10 / 10 ratio into training, validation, and test sets. Five independent splits are generated using different random seeds, producing five-fold cross-validation splits for robust evaluation. In V3, the split is performed at the \textit{preset level}: all three pitch renderings of the same preset are assigned to the same split, preventing any form of data leakage between training and evaluation sets.
-
-\subsubsubsection{Normalization}
-Three normalization schemes are applied, each fitted exclusively on training data and applied identically to validation and test sets to prevent data leakage.
+\noindent Within each bucket, sample indices are deterministically shuffled using a seeded random number generator and then allocated in an 80\,/\,10\,/\,10 ratio to training, validation, and test sets in that order. A guard ensures that at least one sample from every non-empty bucket falls in the training partition, preventing pathologically small strata from being entirely consumed by the test allocation. Five independent splits are generated using seeds 42 through 46, producing five-fold cross-validation partitions for robust evaluation of the $\approx 42{,}520$-sample V1/V2 dataset. Reporting test MAE as mean $\pm$ standard deviation across the five folds controls for the variance introduced by any single arbitrary split.
 
 \par \vspace{0.3cm}
-\textit{Mel spectrograms} are Z-score normalized per scale:
+In V3, sample-level splitting introduces a data leakage problem that does not exist in V1 or V2. Because each preset is rendered at three MIDI pitches, a sample-level split could assign two of a preset's renders to the training partition and the third to the test partition. As all three renders share the same parameter target $\mathbf{y}$, the model would have encountered those exact synthesis parameters during training, artificially deflating the reported test MAE. The V3 split therefore operates at the preset level: all renders of the same preset are treated as a single indivisible group, and entire groups are assigned to partitions rather than individual samples. The group key is computed as the MD5 hash of the 16 parameter values:
+
+\begin{equation}
+k(\theta) = \mathrm{MD5}\!\left(\theta_0,\, \theta_1,\, \ldots,\, \theta_{15}\right)
+\label{eq:preset_key}
+\end{equation}
+
+\noindent This hash is deterministic and identical across all MIDI-note renders of the same preset without requiring a stored group identifier in the dataset. Figure~\ref{fig:preset_split} contrasts the two splitting strategies.
+
+\begin{figure}[H]
+\centering
+\resizebox{\linewidth}{!}{%
+\begin{tikzpicture}[
+  font=\small,
+  cbox/.style={rectangle, rounded corners=3pt, draw=gray!55,
+               minimum height=0.72cm, text width=1.45cm, align=center, font=\scriptsize},
+  pbox/.style={rectangle, rounded corners=4pt, draw=gray!65, fill=orange!10,
+               minimum height=0.88cm, text width=1.9cm, align=center},
+  arr/.style={-{Stealth[length=2.5mm]}, thick, gray!55},
+]
+
+%% LEFT PANEL (incorrect)
+\node[font=\small\bfseries, text=red!60]  at (-3.4, 5.4)  {Sample-level split};
+\node[font=\scriptsize, text=gray!65]     at (-3.4, 5.05) {(incorrect for V3)};
+
+\node[pbox] (PL) at (-3.4, 4.3)
+  {Preset $\theta_1$\\[-2pt]\scriptsize target $\mathbf{y}$};
+
+\node[cbox, fill=green!8, draw=green!45] (L1) at (-5.1, 3.0) {clip 1};
+\node[cbox, fill=green!8, draw=green!45] (L2) at (-3.4, 3.0) {clip 2};
+\node[cbox, fill=red!9,   draw=red!40]   (L3) at (-1.7, 3.0) {clip 3};
+
+\draw[arr] (PL.south) -- (L1.north);
+\draw[arr] (PL.south) -- (L2.north);
+\draw[-{Stealth[length=2.5mm]}, thick, red!55] (PL.south) -- (L3.north);
+
+\draw[dashed, gray!55, thick] (-6.1, 2.2) -- (-0.4, 2.2);
+\node[font=\scriptsize\bfseries, text=gray!65, anchor=south west] at (-6.08, 2.22) {Train};
+\node[font=\scriptsize\bfseries, text=gray!65, anchor=north west] at (-6.08, 2.18) {Test};
+
+\node[cbox, fill=red!9, draw=red!40] (L3b) at (-1.7, 1.55) {clip 3};
+\draw[-{Stealth[length=2.5mm]}, thick, red!55] (L3.south) -- (L3b.north);
+
+\node[font=\scriptsize, text=red!60, align=center] at (-3.4, 0.65)
+  {$\mathbf{y}$ present in Train \emph{and} Test\\
+   $\Rightarrow$ artificially low test MAE};
+
+%% SEPARATOR
+\draw[gray!25, semithick] (0.0, 0.05) -- (0.0, 5.72);
+
+%% RIGHT PANEL (correct)
+\node[font=\small\bfseries, text=teal!60] at (3.6, 5.4)  {Preset-level split};
+\node[font=\scriptsize, text=gray!65]     at (3.6, 5.05) {(correct for V3)};
+
+\node[pbox] (PR) at (3.6, 4.3)
+  {Preset $\theta_1$\\[-2pt]\scriptsize target $\mathbf{y}$};
+
+\draw[rounded corners=5pt, draw=teal!50, fill=teal!5, thick]
+  (1.55, 2.6) rectangle (5.65, 3.6);
+\node[font=\scriptsize\bfseries, text=teal!60, anchor=north west]
+  at (1.63, 3.53) {preset group};
+
+\node[cbox, fill=teal!9, draw=teal!45] at (2.55, 3.1) {clip 1};
+\node[cbox, fill=teal!9, draw=teal!45] at (3.60, 3.1) {clip 2};
+\node[cbox, fill=teal!9, draw=teal!45] at (4.65, 3.1) {clip 3};
+
+\draw[-{Stealth[length=2.5mm]}, thick, teal!55] (PR.south) -- (3.6, 3.6);
+
+\draw[dashed, gray!55, thick] (0.5, 2.2) -- (6.6, 2.2);
+\node[font=\scriptsize\bfseries, text=gray!65, anchor=south west] at (0.52, 2.22) {Train};
+\node[font=\scriptsize\bfseries, text=gray!65, anchor=north west] at (0.52, 2.18) {Test};
+
+\node[font=\scriptsize, text=teal!60, align=center] at (3.6, 0.65)
+  {All renders of $\theta_1$ assigned to Train\\
+   $\Rightarrow$ $\mathbf{y}$ never exposed in Test};
+
+\end{tikzpicture}%
+}
+\vspace{0.3cm}
+\caption{Sample-level versus preset-level splitting for the V3 multi-pitch dataset. \textit{Left:} a sample-level split can assign different MIDI-note renders of the same preset to different partitions; since all renders share the same parameter target~$\mathbf{y}$, the model has already seen those exact parameters during training, causing leakage and an artificially low test MAE. \textit{Right:} the preset-level split groups all renders of a preset by the MD5 hash of their shared parameter values and assigns the entire group to one partition, ensuring the test set contains only unseen presets.}
+\label{fig:preset_split}
+\end{figure}
+
+\noindent Groups are stratified by timbre rather than timbre $\times$ octave, because multi-pitch rendering already places each group across multiple octaves --- stratifying by octave would scatter a single preset's renders across strata rather than keeping them together as one group. Groups within each timbre stratum are shuffled with a fixed seed and divided 80\,/\,10\,/\,10 by group count. A single split is used for V3 rather than five-fold cross-validation, because the computational cost of training two backbone families on $\approx 136{,}000$ samples for 40 epochs renders five independent training runs impractical within the available hardware budget, and because the larger dataset substantially reduces the split-variance that motivated cross-validation at the V1/V2 scale.
+
+\subsubsubsection{Normalization}
+
+Three normalization schemes are applied across all versions, each fitted exclusively on the training partition and applied identically to validation and test sets to prevent any leakage of held-out statistics into the training process.
+
+\par \vspace{0.3cm}
+\textit{Mel spectrograms} are Z-score normalized per mel bin using statistics computed from the training partition only. In V1, a single set of per-bin statistics $(\mu_m, \sigma_m)$ is accumulated online over all time frames of the training mid-scale spectrograms and applied as:
 
 \begin{equation}
 \hat{S}(t, m) = \frac{S(t, m) - \mu_{\text{train}}}{\sigma_{\text{train}}}
 \label{eq:zscore}
 \end{equation}
 
-\noindent \textit{Synthesizer parameters} are min-max normalized per parameter to $[0, 1]$:
+\noindent In V2 and V3, three independent sets of statistics are computed --- one per scale (fine, mid, coarse). Each analysis window produces spectrograms with substantially different absolute energy levels and frequency distributions: the coarse scale concentrates energy into narrow harmonic bins and has a much lower broadband noise floor than the fine scale, which spreads energy broadly across time. Using a single global scaler across all three scales would conflate these different magnitude ranges and degrade normalization quality for the outer scales. Statistics are saved as compressed \texttt{.npz} files per split per scale and loaded at evaluation time, ensuring identical normalization is applied to validation and test sets.
+
+\par \vspace{0.3cm}
+\textit{Synthesizer parameters} are normalized to $[0, 1]$ per parameter, but the normalization scale depends on the physical nature of each parameter. The twelve oscillator, filter, modulation, and reverb parameters are normalized linearly:
 
 \begin{equation}
 \hat{x}_k = \frac{x_k - x_k^{\min}}{x_k^{\max} - x_k^{\min}}, \quad k = 1, \ldots, 16
 \label{eq:minmax}
 \end{equation}
 
-\noindent \textit{MIDI pitch} is normalized to $[0, 1]$ using the fixed global range $[12, 84]$:
+\noindent The four envelope time parameters (\texttt{env1\_attack}, \texttt{env1\_decay}, \texttt{env2\_attack}, \texttt{env2\_decay}) are instead normalized on a logarithmic scale, because envelope times span three orders of magnitude and exhibit perceptual logarithmic scaling --- a 10\,ms attack and a 100\,ms attack are as perceptually distinct as a 100\,ms and a 1{,}000\,ms attack. Equal spacing in log space therefore better represents equal perceptual step size than equal spacing in linear time:
+
+\begin{equation}
+\hat{x}_k = \frac{\log_{10}(x_k + \epsilon_t) - \log_{10}(x_k^{\min} + \epsilon_t)}%
+                 {\log_{10}(x_k^{\max} + \epsilon_t) - \log_{10}(x_k^{\min} + \epsilon_t)},
+\quad k \in \mathcal{K}_{\log}
+\label{eq:lognorm}
+\end{equation}
+
+\noindent where $\mathcal{K}_{\log} = \{\texttt{env1\_attack},\, \texttt{env1\_decay},\, \texttt{env2\_attack},\, \texttt{env2\_decay}\}$ and $\epsilon_t = 10^{-4}$ prevents $\log_{10}(0)$ for near-zero time values. The filter cutoff, expressed in semitones, is normalized linearly since the semitone scale is already logarithmic with respect to frequency.
+
+\par \vspace{0.3cm}
+\textit{MIDI pitch} is normalized to $[0, 1]$ using the fixed global range $[12, 84]$:
 
 \begin{equation}
 p = \frac{\text{midi\_note} - 12}{84 - 12}
@@ -351,12 +456,12 @@ p = \frac{\text{midi\_note} - 12}{84 - 12}
 \hline
 \textbf{Version} & \textbf{Presets} & \textbf{Pitches / Preset} & \textbf{Total Samples} & \textbf{Train} & \textbf{Val} & \textbf{Test} \\
 \hline
-V1 / V2 & $\approx$42{,}520 & 1 & $\approx$42{,}520  & $\approx$34{,}016  & $\approx$4{,}252  & $\approx$4{,}252  \\
-V3      & $\approx$42{,}520 & 3 & $\approx$127{,}000 & $\approx$101{,}600 & $\approx$12{,}700 & $\approx$12{,}700 \\
+V1 / V2 & $\approx$42{,}250 & 1       & $\approx$42{,}250  & $\approx$33{,}800  & $\approx$4{,}225  & $\approx$4{,}225  \\
+V3      & $\approx$42{,}250 & 3 or 4  & $\approx$168{,}000 & $\approx$134{,}400 & $\approx$16{,}800 & $\approx$16{,}800 \\
 \hline
 \end{tabular}
 \vspace{0.3cm}
-\caption{Dataset sizes across experimental versions. V3 splits are performed at preset level to prevent leakage.}
+\caption{Dataset sizes across experimental versions. V3 ``pitches / preset'' is 3 if the V1/V2 random note coincides with one of the three fixed notes (that render is reused), or 4 otherwise; four is the typical outcome. Splits are performed at preset level in all versions to prevent leakage.}
 \label{tab:dataset_sizes}
 \end{table}
 
@@ -512,7 +617,7 @@ where $W_1 \in \mathbb{R}^{256 \times d_{\text{fused}}}$, $W_2 \in \mathbb{R}^{1
 All models are trained with the Adaptive Moment Estimation with Weight Decay (AdamW) optimiser (weight decay $10^{-4}$) for 100 epochs per fold. The batch size and base learning rate are architecture-dependent: the lightweight SynthParamNet CNN uses a larger batch size and higher learning rate, while the pre-trained ConvNeXt-tiny and AST-small backbones use smaller batch sizes and lower learning rates suited to fine-tuning large pre-trained models. For pre-trained backbones (AST, ConvNeXt), a differential learning rate is applied: the backbone parameters are updated at $0.1\times$ the head learning rate to preserve the ImageNet-22k representations during early fine-tuning. A cosine-annealing OneCycleLR scheduler with $\text{pct\_start}=0.3$ is used to warm up the learning rate over the first 30\% of training before annealing. AMP training is enabled on the NVIDIA RTX 4090 with gradient clipping at $\text{max\_norm}=1.0$. The training loss is the standard (unweighted) SmoothL1 loss with $\beta=0.02$.
 
 \paragraph{6) Five-Fold Cross-Validation}
-Five independent stratified splits are generated from the V1/V2 dataset of $\approx 42{,}520$ samples using the timbre $\times$ octave bucket key (Equation~\ref{eq:bucket}). Each split produces a training set of $\approx 34{,}000$ samples and a test set of $\approx 4{,}252$ samples. For each fold, training is performed on the training partition and the model checkpoint with the lowest validation MAE is retained. Test MAE is reported as mean $\pm$ standard deviation across the five splits.
+Five independent stratified splits are generated from the V1/V2 dataset of $\approx 42{,}250$ samples using the timbre $\times$ octave bucket key (Equation~\ref{eq:bucket}). Each split produces a training set of $\approx 33{,}800$ samples and evaluation and test sets of $\approx 4{,}225$ samples each. For each fold, training is performed on the training partition and the model checkpoint with the lowest validation MAE is retained. Test MAE is reported as mean $\pm$ standard deviation across the five splits.
 
 \subsubsection{Solution Evaluation}
 
@@ -712,7 +817,7 @@ The combined V2 enhancements produce a substantial reduction in MAE. The best V2
 FiLM conditioning provides a small but consistent improvement over the no-pitch variant for both backbones: $-0.0016$ MAE for ConvNeXt ($2.4\%$ reduction) and $-0.0014$ for AST ($1.9\%$ reduction). This improvement is statistically consistent across all five splits in both cases, confirming that the pitch information is genuinely useful. Nevertheless, the magnitude of the FiLM benefit is modest relative to the V1-to-V2 improvement, suggesting that the pitch conditioning pathway is not being fully exploited. Inspection of per-parameter results reveals that \texttt{osc2\_transpose} — the parameter most directly related to pitch — benefits from FiLM conditioning (its MAE drops from 0.078 to 0.076 in ConvNeXt), but the gain is smaller than expected for a parameter whose ground truth should be directly predictable from the MIDI note.
 
 \noindent \newline
-Beyond the limited FiLM benefit, both V2 models exhibit clear signs of overfitting: training MAE continues to decrease well below validation MAE, which plateaus around $0.055$–$0.060$ by epoch 30. This train-to-validation gap indicates that the $\approx 42{,}520$-sample dataset is insufficient to fully regularise models of this capacity. This combination of limited FiLM effectiveness and overfitting raises a critical question for Iteration 3: \textit{Is FiLM conditioning inherently insufficient for this task, or does its effectiveness depend on training data that presents the same preset parameter vector at multiple pitch positions — forcing the model to leverage pitch to resolve spectral ambiguity rather than relying solely on absolute spectral position?} To address both weaknesses simultaneously, Iteration 3 re-renders the existing $\approx 42{,}520$ presets at three different MIDI pitches each, rather than generating new presets. This approach expands the dataset to approximately $170{,}000$ samples while ensuring that the FiLM conditioning pathway receives meaningful cross-pitch variation: the same parameter target $\mathbf{y}$ now appears paired with multiple spectrally distinct inputs, directly testing whether pitch-aware training activates the FiLM pathway.
+Beyond the limited FiLM benefit, both V2 models exhibit clear signs of overfitting: training MAE continues to decrease well below validation MAE, which plateaus around $0.055$–$0.060$ by epoch 30. This train-to-validation gap indicates that the $\approx 42{,}250$-sample dataset is insufficient to fully regularise models of this capacity. This combination of limited FiLM effectiveness and overfitting raises a critical question for Iteration 3: \textit{Is FiLM conditioning inherently insufficient for this task, or does its effectiveness depend on training data that presents the same preset parameter vector at multiple pitch positions — forcing the model to leverage pitch to resolve spectral ambiguity rather than relying solely on absolute spectral position?} To address both weaknesses simultaneously, Iteration 3 re-renders the existing $\approx 42{,}250$ presets at up to three fixed MIDI pitches each, rather than generating new presets. This approach expands the dataset to approximately $168{,}000$ samples after silence filtering while ensuring that the FiLM conditioning pathway receives meaningful cross-pitch variation: the same parameter target $\mathbf{y}$ now appears paired with multiple spectrally distinct inputs, directly testing whether pitch-aware training activates the FiLM pathway.
 
 
 % ═══════════════════════════════════════════════════════════
@@ -727,7 +832,7 @@ The third iteration addresses the two main weaknesses identified in V2 — limit
 In V1 and V2, every preset in the dataset is rendered at exactly one MIDI pitch, sampled uniformly from the timbre's valid range. This means that the model never observes the same parameter vector $\mathbf{y}$ at different spectral positions: each training sample is a unique (spectrogram, parameters) pair. A model in this setting can achieve low training loss by learning to associate specific absolute spectral patterns with parameter values, effectively using the pitch-dependent spectral position of harmonics as an implicit shortcut. Under this regime, the FiLM conditioning pathway receives no training pressure to actually modulate features based on pitch, because pitch-independent spectral matching is already sufficient to minimise the loss.
 
 \noindent \newline
-The training logs from V2 provide additional evidence of a generalisation problem: by epoch 30, both the ConvNeXt-tiny and AST-small models achieve training MAE values below $0.020$, while validation MAE plateaus around $0.055$–$0.060$. This train-to-validation gap indicates that the models have partially memorised spectral patterns specific to individual presets rather than learning a generalised mapping from timbre features to synthesis parameters. With only $\approx 42{,}520$ training samples shared across two backbones with 28M and 23M parameters respectively, regularisation through data diversity is a natural remedy.
+The training logs from V2 provide additional evidence of a generalisation problem: by epoch 30, both the ConvNeXt-tiny and AST-small models achieve training MAE values below $0.020$, while validation MAE plateaus around $0.055$–$0.060$. This train-to-validation gap indicates that the models have partially memorised spectral patterns specific to individual presets rather than learning a generalised mapping from timbre features to synthesis parameters. With only $\approx 42{,}250$ training samples shared across two backbones with 28M and 23M parameters respectively, regularisation through data diversity is a natural remedy.
 
 \noindent \newline
 \textit{Will rendering each preset at three distinct MIDI pitches — so that the model observes the same parameter vector $\mathbf{y}$ at three different spectral positions — activate the FiLM conditioning pathway and, combined with SpecAugment regularisation, reduce the train-to-validation gap?}
@@ -735,7 +840,7 @@ The training logs from V2 provide additional evidence of a generalisation proble
 \subsubsection{Solution Design}
 
 \noindent
-The V3 solution addresses both weaknesses through a redesigned data generation regime. Each of the $\approx 42{,}520$ presets from the V1/V2 dataset is re-rendered at three fixed MIDI pitches per timbre, selected to cover the low, mid, and high registers of each timbre's valid range. The rendering pipeline uses a hash-based checkpoint system keyed on the (sorted preset parameters, MIDI note) pair: any combination already present from V1/V2 rendering is detected and skipped, while the three new fixed-note renderings are appended directly to the existing dataset file in append mode. Because the V1/V2 random note is typically distinct from the three fixed V3 notes, most presets gain three new renderings in addition to their original one, expanding the dataset from $\approx 42{,}520$ to $\approx 170{,}000$ samples. Crucially, each parameter vector $\mathbf{y}$ now appears paired with multiple spectrally distinct audio clips, providing the FiLM conditioning pathway with genuine cross-pitch training signal: it must learn to produce pitch-specific feature modulations that allow the same backbone embedding to be corrected for pitch-dependent spectral shift.
+The V3 solution addresses both weaknesses through a redesigned data generation regime. Each of the $\approx 42{,}250$ presets from the V1/V2 dataset is re-rendered at up to three fixed MIDI pitches per timbre, selected to cover the low, mid, and high registers of each timbre's valid range. The rendering pipeline uses a hash-based checkpoint system keyed on the (sorted preset parameters, MIDI note) pair: if the existing V1/V2 random note coincides with one of the three fixed notes, that render is already present and is skipped, and only the remaining two fixed notes are rendered; otherwise all three are rendered. Each preset therefore gains two or three new renderings in addition to its original V1/V2 render, giving three or four clips per preset in total — with four being typical since the random V1/V2 note rarely matches the fixed schedule. New renders are appended directly to the existing dataset file in append mode. After silence filtering, this expands the dataset from $\approx 42{,}250$ to $\approx 168{,}000$ samples. Crucially, each parameter vector $\mathbf{y}$ now appears paired with multiple spectrally distinct audio clips, providing the FiLM conditioning pathway with genuine cross-pitch training signal: it must learn to produce pitch-specific feature modulations that allow the same backbone embedding to be corrected for pitch-dependent spectral shift.
 
 \noindent \newline
 SpecAugment \cite{park2019specaugment} is introduced as an online training-time regulariser. Two time masks and two frequency masks are applied independently to each training sample per forward pass, preventing the model from over-relying on narrow spectral or temporal features and further increasing the effective diversity of the training distribution. Figure~\ref{fig:v3_design} illustrates the V3 data generation and augmentation pipeline.
@@ -821,7 +926,7 @@ Because each preset now contributes multiple training samples (the original V1/V
 \subsubsection{Solution Implementation}
 
 \paragraph{1) Multi-Pitch Audio Rendering}
-Each of the $\approx 42{,}520$ presets from the original dataset is re-rendered at three fixed MIDI pitches per timbre, following the schedule in Table~\ref{tab:v3_midi}. New entries are appended to the existing \texttt{combined\_dataset.jsonl} in append mode; the hash keyed on (sorted preset parameters, MIDI note) ensures that any (preset, note) pair already rendered in V1/V2 is detected and skipped. After silence filtering, the expanded dataset contains approximately $170{,}000$ samples — the original $\approx 42{,}520$ V1/V2 entries plus three new renders per preset.
+Each of the $\approx 42{,}250$ presets from the original dataset is re-rendered at up to three fixed MIDI pitches per timbre, following the schedule in Table~\ref{tab:v3_midi}. New renders are appended to the existing \texttt{combined\_dataset.jsonl} in append mode; a hash keyed on the (sorted preset parameters, MIDI note) pair detects any (preset, note) combination already present from V1/V2 and skips it. If the V1/V2 random note coincides with one of the three fixed notes, only the remaining two are rendered and the preset ends up with three clips; otherwise all three are rendered and the preset ends up with four clips. Four is the typical outcome since the random V1/V2 note rarely matches the fixed schedule. After silence filtering, the expanded dataset contains approximately $168{,}000$ samples — the original $\approx 42{,}250$ V1/V2 entries plus two or three new renders per preset.
 
 \begin{table}[H]
 \centering
@@ -838,7 +943,7 @@ random & 24, 48, 72 & C1, C3, C5 \\
 \hline
 \end{tabular}
 \vspace{0.3cm}
-\caption{Fixed MIDI pitches per timbre used in V3. Each note is rendered independently for every preset, producing three training samples with the same parameter target $\mathbf{y}$.}
+\caption{Fixed MIDI pitches per timbre used in V3. For each preset, up to three new renders are produced at these notes; if the existing V1/V2 random note coincides with one fixed note, that render is reused and only the remaining two are rendered, leaving the preset with three or four clips in total.}
 \label{tab:v3_midi}
 \end{table}
 
@@ -846,7 +951,7 @@ random & 24, 48, 72 & C1, C3, C5 \\
 During training, each input tensor $(3, 128, 224)$ is augmented with two independent time masks (each with width drawn from $\mathcal{U}[0, 30]$ frames) and two independent frequency masks (each with width drawn from $\mathcal{U}[0, 15]$ mel bins). The same mask pattern is applied identically to all three channel slices of the tensor, preserving the inter-channel consistency of the fine, mid, and coarse spectrograms. Masked values are replaced with the global minimum of the normalised spectrogram. SpecAugment is disabled at validation and test time.
 
 \paragraph{3) Preset-Level Dataset Split}
-The $\approx 42{,}520$ unique presets are stratified by timbre $\times$ octave bucket (Equation~\ref{eq:bucket}) and split into training (80\%), validation (10\%), and test (10\%) partitions at the preset level. All renderings of each preset follow their preset's partition assignment, producing $\approx 136{,}000$ training samples and $\approx 17{,}000$ validation samples. A single split is used for V3 (rather than five-fold cross-validation) due to the computational cost of training two models on $\approx 136{,}000$ samples for 40 epochs.
+The $\approx 42{,}250$ unique presets are stratified by timbre and split 80/10/10 at the preset level, as described in Step~6 above. All renders of each preset follow their preset's partition assignment, producing $\approx 134{,}400$ training samples and $\approx 16{,}800$ validation and test samples respectively. A single split is used for V3 (rather than five-fold cross-validation) due to the computational cost of training two models on $\approx 134{,}400$ samples for 40 epochs.
 
 \paragraph{4) Training Configuration}
 The model architecture is identical to V2 (ConvNeXt-tiny and AST-small backbones, FiLM conditioning, grouped prediction head, weighted SmoothL1 loss). Training hyperparameters are also unchanged: AdamW ($\text{wd}=10^{-4}$), differential learning rate, OneCycleLR ($\text{pct\_start}=0.3$), 40 epochs, architecture-dependent batch size (128 or 256), AMP. SpecAugment augmentation is active during the forward passes on the training partition only.
