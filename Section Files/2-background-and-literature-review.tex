@@ -351,6 +351,7 @@ Bruford et al. \cite{bruford2024ast} applied AST to synthesizer sound matching, 
 \subsubsection{Conditioning and Data Augmentation}
 
 \subsubsubsection{FiLM Conditioning}
+\label{ssub:film_conditioning}
 Perez et al.\ \cite{perez2018film} introduced FiLM, a lightweight but expressive conditioning mechanism. The idea is straightforward: a conditioning signal --- in this work, the MIDI pitch of the rendered note --- is passed through a small Multi-Layer Perceptron (MLP) that predicts two vectors, a scale $\gamma$ and a shift $\beta$. These are then applied element-wise to an intermediate feature map $\mathbf{z}$:
 
 \begin{equation}

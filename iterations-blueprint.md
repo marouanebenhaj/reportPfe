@@ -518,45 +518,85 @@ ConvNeXt-tiny, now trained with the full V2 architecture.
 
 ## 3.1 Problem Investigation
 
-The V1 evaluation exposed two concrete limitations that this iteration sets out to
-remove. First, the single mid-scale mel spectrogram (n_fft = 2,048, hop = 512) enforces
-a fixed time-frequency trade-off, and the oscillator parameters, which dominate V1
-error, depend on harmonic structure that a single window cannot resolve well:
-discriminating wavetable positions requires observing how individual harmonics are
-shaped and spaced, which is clearest at long analysis windows, while transient and
-envelope cues are clearest at short windows. All of this complementary information is
-discarded in V1. Stacking three resolutions, coarse for harmonic structure, mid as a
-balanced reference, and fine for short-time detail, is the natural response.
+The V1 evaluation exposed three concrete limitations of the baseline design.
 
-Second, V1 fused pitch by concatenation after the backbone had finished processing the
-spectrogram, so the backbone never extracted features with any awareness of pitch and
-the pitch signal entered only at the final stage. FiLM offers a more expressive
-alternative, allowing pitch to apply a learned affine transformation to the mel
-embedding, suppressing or amplifying specific feature dimensions rather than merely
-appending new ones.
+First, the single mid-scale mel spectrogram (n_fft = 2,048, hop = 512) fixes one
+time-frequency trade-off for the entire task. As established in Section
+[REF: ssub:audio_representations], no single analysis window resolves both fine temporal
+and fine spectral detail at once. The oscillator parameters, which dominate V1 error,
+depend precisely on harmonic detail, since discriminating wavetable positions requires
+observing how individual harmonics are shaped and spaced, information a single mid window
+resolves only partially, while the complementary short-window and long-window views are
+simply unavailable to the V1 model.
 
-Third, the V1 per-parameter analysis showed oscillator MAE two to three times higher
-than envelope and filter MAE, yet a single flat head allocates identical capacity to
-easy and hard parameters. This motivates a grouped head that assigns a wider sub-network
-to the harder oscillator group.
+Second, V1 supplied pitch by concatenating a pitch vector onto the mel embedding only
+after the backbone had finished processing the spectrogram. The backbone therefore
+extracted its features with no awareness of pitch, and the pitch signal could influence
+only the final regression layers rather than the representation itself. The per-parameter
+V1 results show this most plainly on `osc2_transpose`, the parameter most directly tied
+to pitch, which remained among the harder oscillator parameters even though pitch was
+nominally available to the model.
+
+Third, V1 treated all sixteen parameters identically, both in model capacity and in the
+training objective. A single flat head and an unweighted loss assigned the same capacity
+and the same weight to the easy envelope and filter parameters as to the oscillator
+group, even though the per-parameter analysis showed oscillator MAE two to three times
+higher. The baseline had no mechanism to concentrate either modelling capacity or
+training signal where the error was largest.
 
 ## 3.2 Solution Design
 
-The V2 solution applies four changes uniformly to both backbones. The first replaces the
-single-scale input with a three-channel stack of fine, mid, and coarse spectrograms
-(`fig:multiscale_stack`), producing a `(3, 128, 224)` tensor compatible with the
-pre-trained RGB stems. The second replaces concatenation with FiLM, deriving scale and
-shift parameters from the pitch embedding and applying them to the backbone output. The
-third introduces a grouped head of four specialised sub-MLPs, with the oscillator group
-receiving a wider sub-network. The fourth introduces a group-weighted SmoothL1 objective
-that doubles the oscillator group's loss contribution.
+Each limitation is addressed by one targeted design change. The concepts introduced in
+this iteration are summarised in the box below; FiLM in particular is treated in full in
+the Background (Section [REF: ssub:film_conditioning]).
+
+> **Concepts used in this iteration.** LaTeX note: render as a short shaded callout, in
+> the same style as the section-opening Key Concepts box. Depends on a new label
+> `\label{ssub:film_conditioning}` to be added after the `\subsubsubsection{FiLM
+> Conditioning}` heading in `2-background-and-literature-review.tex`.
+>
+> - **Multi-scale mel input** *(see Section [REF: ssub:audio_representations])* — the
+>   three-channel stack of fine, mid, and coarse mel spectrograms, and the time-frequency
+>   resolution trade-off that motivates it, are introduced in the Background.
+> - **FiLM (Feature-wise Linear Modulation)** *(see Section [REF: ssub:film_conditioning])*
+>   — the pitch-conditioning mechanism, in which an auxiliary signal predicts a per-feature
+>   scale and shift applied to a feature vector, is defined in the Background.
+> - **Grouped prediction head** — a prediction head split into several small sub-networks,
+>   one per semantically related group of parameters, instead of one shared MLP for all
+>   sixteen outputs. Specific to this work.
+> - **Group-weighted loss** — a training objective that scales the loss contribution of
+>   each parameter group, so harder groups (here the oscillator parameters) can be
+>   emphasised relative to the rest. Specific to this work.
+
+The four changes map directly onto the three limitations:
+
+- **Multi-scale three-channel input** (addresses the fixed time-frequency trade-off). The
+  single mid-scale spectrogram is replaced by a stack of three spectrograms at fine, mid,
+  and coarse resolutions: the coarse scale resolves harmonic structure, the fine scale
+  captures transients and onsets, and the mid scale retains the V1 reference view. The
+  three are stacked along the channel dimension into a `(3, 128, 224)` tensor
+  (`fig:multiscale_stack`), directly compatible with the three-channel stems of the
+  pre-trained ConvNeXt and ViT backbones.
+- **FiLM pitch conditioning** (addresses late concatenation of pitch). Concatenation is
+  replaced by FiLM: the pitch embedding predicts a scale and shift that are applied to
+  the backbone output as an affine transform, so pitch can suppress or amplify individual
+  feature dimensions rather than merely appending new ones.
+- **Grouped prediction head** (addresses uniform capacity across parameters). The flat
+  MLP is replaced by four specialised sub-MLPs, one per parameter group (oscillator,
+  envelope, filter, misc), with the oscillator group given a wider sub-network so the
+  hardest parameters receive the most capacity.
+- **Group-weighted loss** (addresses uniform weighting across parameters). The unweighted
+  objective is replaced by a group-weighted SmoothL1 in which the oscillator group's loss
+  contribution is doubled, concentrating the training signal on the highest-error
+  parameters.
+
+The backbone comparison is held fixed at AST-small and ConvNeXt-tiny so that any change
+in MAE is attributable to the four enhancements rather than to a change of architecture.
+The FiLM conditioning, grouped head, and weighted loss are formalised under Design
+Implementation.
 
 [FIG: fig:v2_design — the V2 (and V3) architecture: 3-channel mel → backbone → FiLM
 modulation from the sinusoidal pitch embedding → grouped head → 16 parameters.]
-
-The FiLM conditioning and grouped head are formalised under Design Implementation. The
-grouped head replaces the flat MLP of V1 (`eq:flat_head`) with four sub-networks, each
-operating on the full modulated embedding but predicting only its assigned subset.
 
 ## 3.3 Design Validation
 
@@ -625,11 +665,15 @@ by roughly 12%, confirming that the three-channel input captures complementary
 time-frequency information unavailable to a single scale. ConvNeXt continues to
 outperform AST, now by 0.0048 MAE under FiLM.
 
-FiLM provides a small but consistent improvement over the no-pitch variant, −0.0016 MAE
-for ConvNeXt and −0.0014 for AST, consistent across all five splits. The magnitude is
-modest relative to the V1-to-V2 gain: `osc2_transpose`, the parameter most directly tied
-to pitch, improves only from 0.078 to 0.076 under FiLM, smaller than expected for a
-parameter whose ground truth is closely related to the input pitch.
+FiLM provides a small but consistent improvement in the overall average, −0.0016 MAE for
+ConvNeXt and −0.0014 for AST, consistent across all five splits. The effect is, however,
+sharply concentrated: it falls almost entirely on `osc2_transpose`, the parameter most
+directly tied to pitch, which improves from 0.078 to 0.062 under FiLM for ConvNeXt, the
+largest single-parameter gain of any change in this iteration. Because `osc2_transpose`
+is one parameter among sixteen, this large local gain is diluted into a modest movement
+of the overall average, while the remaining parameters are largely unaffected by pitch
+conditioning. In other words, on single-pitch data FiLM sharpens exactly the one
+parameter for which pitch is a near-direct cue but does little elsewhere.
 
 Both V2 models also show clear overfitting: training MAE falls well below validation MAE,
 which plateaus around 0.055 to 0.060 by epoch 30, indicating the ~42,250-sample dataset
