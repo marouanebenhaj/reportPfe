@@ -3,12 +3,14 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{BACKGROUND AND LITERATURE REVIEW}
+\label{sec:background}
 
 This section builds the foundation the rest of the paper rests on. It opens with a brief history of electronic synthesizers and what they actually are --- how they generate sound, and what the physics underneath that process looks like. From there, it narrows to Vital, explaining why this particular synthesizer was chosen over others for this study. It then covers audio representations, discussing how raw audio gets turned into something a neural network can work with. The section closes with a review of related work, tracing how the field has approached the inverse synthesis problem and where the gaps still are.
 
 \subsection{Background}
 
 \subsubsection{Sound Synthesis and the Vital Synthesizer}
+\label{ssub:sound_synthesis}
 
 \subsubsubsection{A Brief History of Sound Synthesis}
 
@@ -144,7 +146,7 @@ Triangle & Odd harmonics only ($f_0, 3f_0, 5f_0, \ldots$)     & $1/n^2$     & So
 
 \par \vspace{0.3cm}
 
-\noindent \textbf{MIDI and note events.} MIDI is a communication protocol that represents musical performance as a stream of discrete messages rather than audio. A \textit{note-on} message tells the synthesizer which pitch to play and at what velocity; a \textit{note-off} message signals that the key has been released and triggers the release stage of any active envelopes. MIDI pitch is encoded as an integer from 0 to 127, where middle C is note 60 and each step corresponds to one semitone. The physical frequency of a MIDI note $p$ is:
+\noindent \textbf{MIDI and note events.} MIDI is a communication protocol that represents musical performance as a stream of discrete messages rather than audio. A \textit{note-on} message tells the synthesizer which pitch to play and at what velocity; a \textit{note-off} message signals that the key has been released and triggers the release stage of any active envelopes. MIDI pitch is encoded as an integer from 0 to 127, where middle C is note 60 and each step corresponds to one semitone. Twelve semitones make up one octave, corresponding to a doubling of frequency. The physical frequency of a MIDI note $p$ is:
 \begin{equation}
   f = 440 \cdot 2^{(p-69)/12} \text{ Hz}
   \label{eq:midi_freq}
@@ -184,8 +186,9 @@ The inverse synthesis problem is formally defined as follows. Let $\mathbf{y}$ d
 \noindent The problem is inherently challenging for several reasons. First, the mapping from parameters to audio is \textit{highly non-linear}: small changes in certain parameters (e.g., filter resonance near self-oscillation, unison detune at high voice counts) can produce disproportionately large perceptual changes, while large changes in others (e.g., reverb mix at low values) may be nearly imperceptible. Second, the problem is \textit{ill-posed}: multiple distinct parameter configurations can produce perceptually similar or identical sounds. This many-to-one relationship makes the inverse mapping ambiguous and complicates loss function design. Third, parameters are \textit{interdependent}: the perceptual effect of the filter cutoff, for example, depends on the current envelope modulation depth and the oscillator content feeding into it.
 
 \subsubsection{Audio Representations}
+\label{ssub:audio_representations}
 
-\noindent \textbf{Digital audio and sampling rate.} A digital audio signal is a sequence of amplitude values --- \textit{samples} --- measured at uniformly spaced time intervals. The number of samples captured per second is the \textit{sampling rate}, denoted $f_s$ and expressed in Hertz. By the Nyquist--Shannon sampling theorem, a signal sampled at $f_s$ can represent frequencies up to $f_s / 2$ without aliasing; all frequency content above that limit must be removed before sampling to avoid distortion. In this work, all audio is rendered and processed at $f_s = 44{,}100$~Hz (44.1~kHz), the standard rate for consumer audio, which yields an upper representable frequency of 22{,}050~Hz --- well above the 12{,}000~Hz ceiling used for mel spectrogram computation. The sample rate $f_s$ appears explicitly in the frequency resolution of the STFT and the physical frequency axis of the mel spectrogram, both defined below.
+\noindent \textbf{Digital audio and sampling rate.} A digital audio signal is a sequence of amplitude values --- \textit{samples} --- measured at uniformly spaced time intervals. A recording may carry a single such sequence (\textit{mono}) or several (e.g.\ stereo); all audio in this work is single-channel (mono) and stored uncompressed in the WAV format, which preserves every sample exactly. The number of samples captured per second is the \textit{sampling rate}, denoted $f_s$ and expressed in Hertz. By the Nyquist--Shannon sampling theorem, a signal sampled at $f_s$ can represent frequencies up to $f_s / 2$ without aliasing; all frequency content above that limit must be removed before sampling to avoid distortion. In this work, all audio is rendered and processed at $f_s = 44{,}100$~Hz (44.1~kHz), the standard rate for consumer audio, which yields an upper representable frequency of 22{,}050~Hz --- well above the 12{,}000~Hz ceiling used for mel spectrogram computation. The sample rate $f_s$ appears explicitly in the frequency resolution of the STFT and the physical frequency axis of the mel spectrogram, both defined below.
 
 \par \vspace{0.3cm}
 
