@@ -148,7 +148,7 @@ The primary evaluation metric is MAE in the normalised parameter space. After mi
 
 \begin{equation}
 \text{MAE} = \frac{1}{16N} \sum_{i=1}^{N} \sum_{k=1}^{16} \left|\hat{x}_{i,k} - x_{i,k}\right|
-\label{eq:mae}
+\label{eq:mae}\eqname{Mean Absolute Error metric}
 \end{equation}
 
 \noindent where $x_{i,k}$ is the ground-truth normalised value of parameter $k$ for sample $i$ and $\hat{x}_{i,k}$ is the model's prediction.
@@ -164,7 +164,7 @@ The primary evaluation metric is MAE in the normalised parameter space. After mi
 
 \begin{equation}
 \mathcal{L}_{\text{MSS}}(y,\, \hat{y}) = \sum_{s} \left\| \log S_s(y) - \log S_s(\hat{y}) \right\|_1
-\label{eq:mss}
+\label{eq:mss}\eqname{Multi-Scale Spectral loss}
 \end{equation}
 
 \noindent where $S_s(\cdot)$ is the mel spectrogram at scale $s$. A lower MSS means the re-rendered audio is spectrally closer to the original. Because Vital is non-differentiable, MSS is not used as a training objective — it is a post-hoc check that the predicted parameters sound right, not just that they are numerically close in the normalised parameter space. It is computed on a shared 100-sample test set to keep render times manageable.

@@ -4,6 +4,7 @@
 *.bcf
 *.blg
 *.lof
+*.loe
 *.log
 *.lot
 *.out

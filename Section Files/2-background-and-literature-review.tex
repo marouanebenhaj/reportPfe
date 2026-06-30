@@ -149,7 +149,7 @@ Triangle & Odd harmonics only ($f_0, 3f_0, 5f_0, \ldots$)     & $1/n^2$     & So
 \noindent \textbf{MIDI and note events.} MIDI is a communication protocol that represents musical performance as a stream of discrete messages rather than audio. A \textit{note-on} message tells the synthesizer which pitch to play and at what velocity; a \textit{note-off} message signals that the key has been released and triggers the release stage of any active envelopes. MIDI pitch is encoded as an integer from 0 to 127, where middle C is note 60 and each step corresponds to one semitone. Twelve semitones make up one octave, corresponding to a doubling of frequency. The physical frequency of a MIDI note $p$ is:
 \begin{equation}
   f = 440 \cdot 2^{(p-69)/12} \text{ Hz}
-  \label{eq:midi_freq}
+  \label{eq:midi_freq}\eqname{MIDI note to frequency conversion}
 \end{equation}
 In this work, each audio clip is rendered by sending a single note-on event at a chosen MIDI pitch with no subsequent note-off. The sound therefore sustains for the full 4-second clip duration, which means the release stage of every envelope is never triggered. As noted in Section~\ref{sec:iterations}, this is the reason release is excluded from the 16 studied parameters.
 
@@ -196,7 +196,7 @@ A spectrogram is a visual representation of how the frequency content of a signa
 
 \begin{equation}
   X[k] = \sum_{n=0}^{N-1} x[n] \cdot e^{-j2\pi kn/N}, \quad k = 0, 1, \ldots, N-1
-  \label{eq:dft}
+  \label{eq:dft}\eqname{Discrete Fourier Transform}
 \end{equation}
 
 \noindent where $k$ indexes the frequency bin, corresponding to the physical frequency $f_k = k \cdot f_s / N$, with $f_s$ the sample rate. The DFT decomposes the signal into its constituent sinusoids, revealing which frequencies are present and at what amplitude.
@@ -207,7 +207,7 @@ A spectrogram is a visual representation of how the frequency content of a signa
 
 \begin{equation}
   X[m, k] = \sum_{n=0}^{N-1} x[n + mH] \cdot w[n] \cdot e^{-j2\pi kn/N}
-  \label{eq:stft_bg}
+  \label{eq:stft_bg}\eqname{Short-Time Fourier Transform}
 \end{equation}
 
 \noindent where $m$ is the frame index, $H$ is the hop length, $N$ is the window size, and $w[n]$ is a tapering function --- typically a Hann window --- applied to each frame to reduce spectral leakage at the boundaries. The window size $N$ and hop length $H$ control the fundamental resolution trade-off of the STFT. A larger window captures more signal per frame, yielding finer frequency resolution ($\Delta f = f_s/N$) but coarser time resolution. A smaller window resolves fast temporal events such as percussive attacks more sharply, at the cost of frequency precision. The hop length $H$ determines how far the window advances between successive frames: a smaller hop produces a denser time axis at higher computational cost. This trade-off reflects the time-frequency uncertainty principle --- no window can achieve arbitrarily fine resolution in both dimensions simultaneously. The magnitude $|X[m,k]|$, referred to as the spectrogram, is what is stored and used as a model input; the phase is discarded, as the spectral energy distribution alone is sufficient to characterise synthesizer parameters.
@@ -230,7 +230,7 @@ A spectrogram is a visual representation of how the frequency content of a signa
 
 \begin{equation}
   m(f) = 2595 \cdot \log_{10}\!\left(1 + \frac{f}{700}\right)
-  \label{eq:mel_bg}
+  \label{eq:mel_bg}\eqname{Hertz to mel scale conversion}
 \end{equation}
 
 \par \vspace{0.3cm}
@@ -282,7 +282,7 @@ CNNs were among the first deep learning architectures applied to large-scale aud
 
 \begin{equation}
   \mathbf{y} = \mathcal{F}(\mathbf{x},\, \{W_i\}) + \mathbf{x}
-  \label{eq:residual}
+  \label{eq:residual}\eqname{Residual learning block}
 \end{equation}
 
 \noindent where $\mathbf{x}$ is the block input, $\mathbf{y}$ is its output, and $\mathcal{F}(\mathbf{x}, \{W_i\})$ is the residual function learned by the stacked layers. The identity shortcut connection $+\,\mathbf{x}$ adds the input directly to the output, bypassing the nonlinear transformations. This connection costs no additional parameters and introduces no computational overhead; it simply provides a gradient highway through which error signals can flow directly to earlier layers without attenuation. If the optimal mapping is close to the identity, it is much easier for the network to drive $\mathcal{F}(\mathbf{x})$ toward zero than to learn the identity through a stack of nonlinear layers.
@@ -304,7 +304,7 @@ Dosovitskiy et al.\ \cite{dosovitskiy2021vit} introduced the Vision Transformer 
 
 \begin{equation}
   \text{Attention}(Q, K, V) = \text{softmax}\!\left(\frac{QK^\top}{\sqrt{d_k}}\right)V
-  \label{eq:selfattn}
+  \label{eq:selfattn}\eqname{Scaled dot-product self-attention}
 \end{equation}
 
 \noindent where $Q$, $K$, and $V$ are learned linear projections of the input tokens and $d_k$ is the key dimension. Unlike convolutions, which share weights locally and process each neighbourhood independently, self-attention lets every token attend to every other token in a single operation, capturing global spatial dependencies that local receptive fields cannot reach. ViT was pre-trained on large image datasets (JFT-300M, ImageNet-21k) and demonstrated that a pure Transformer, with no convolutional inductive bias, can match or exceed convolutional networks on standard image recognition benchmarks when trained at sufficient scale. Figure~\ref{fig:vit_arch} shows the ViT architecture as presented in the original paper.
@@ -356,12 +356,13 @@ Perez et al.\ \cite{perez2018film} introduced FiLM, a lightweight but expressive
 
 \begin{equation}
   \tilde{\mathbf{z}} = (1 + \gamma) \odot \mathbf{z} + \beta
-  \label{eq:film_bg}
+  \label{eq:film_bg}\eqname{FiLM feature-wise linear modulation}
 \end{equation}
 
 \noindent Here, $\gamma \in \mathbb{R}^d$ rescales each feature dimension multiplicatively, and $\beta \in \mathbb{R}^d$ shifts it additively, where $d$ is the feature dimension and $\odot$ denotes element-wise multiplication. Together they allow the conditioning signal to reshape the feature representation in a learned, input-dependent way. Initialising the FiLM MLP weights to zero at the start of training ensures that $\gamma = \mathbf{0}$ and $\beta = \mathbf{0}$ initially, so the transform reduces to the identity and training begins from a stable baseline. This is a more expressive alternative to simply concatenating the pitch value onto the feature vector, which can only add information additively rather than modulating what is already there.
 
 \subsubsubsection{SpecAugment}
+\label{ssub:specaugment}
 Park et al.\ \cite{park2019specaugment} introduced \textit{SpecAugment}, a simple augmentation technique that works by randomly blanking out rectangular regions of the mel spectrogram --- strips along the time axis, strips along the frequency axis, or both. The result is that the model never sees the same input twice in quite the same way, and learns not to depend on any particular time slice or frequency band being present. It is essentially dropout for spectrograms, and it has proven effective at reducing overfitting across a range of audio tasks. In this work it is applied during V3 training, where the larger dataset makes it possible to use stronger regularisation without starving the model of signal.
 
 \subsection{Summary and Research Gap}

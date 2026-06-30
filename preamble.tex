@@ -163,6 +163,19 @@
 % set the number column wide enough (adjust 99 if you have more than 99 figures)
 \setlength{\cftfignumwidth}{\widthof{\textbf{Figure~99: }}}
 
+% ---- List of Equations ----
+% A custom "List of Equations" built with tocloft. Equations are registered with
+% \eqname{<name>} placed just after the \label inside an equation environment; only
+% the name and page appear in the list (not the equation itself).
+\newcommand{\listequationsname}{List of Equations}
+\newlistof{myequation}{loe}{\listequationsname}
+\renewcommand{\cftmyequationpresnum}{\textbf{Equation~}}
+\renewcommand{\cftmyequationaftersnum}{\textbf{:}\space}
+\setlength{\cftmyequationnumwidth}{\widthof{\textbf{Equation~99: }}}
+\newcommand{\eqname}[1]{%
+  \addcontentsline{loe}{myequation}{\protect\numberline{\theequation}#1}%
+}
+
 
 
 

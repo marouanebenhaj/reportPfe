@@ -695,26 +695,66 @@ the intervention re-renders each preset at multiple MIDI pitches and adds SpecAu
 
 ## 4.1 Problem Investigation
 
-In V1 and V2 every preset is rendered at exactly one pitch, so the model never observes
-the same parameter vector at different spectral positions; each training sample is a
-unique (spectrogram, parameters) pair. In this setting a model can minimise training
-loss by associating absolute spectral patterns with parameter values, using the
-pitch-dependent position of harmonics as an implicit shortcut. Under this regime the
-FiLM pathway receives no pressure to modulate features by pitch, because pitch-
-independent spectral matching already suffices, which directly explains the muted FiLM
-benefit observed in the V2 evaluation.
+The V2 evaluation surfaced three concerns that point to the training data regime rather
+than the model architecture. First, both V2 backbones showed clear signs of overfitting.
+The quantity optimised during training is the weighted SmoothL1 (Huber) loss, while the
+metric tracked on the validation set is the mean absolute error; over the V2 run the two
+curves diverged. The training loss kept falling steadily toward zero (below roughly 0.015
+by the final epochs) while the validation MAE stopped improving and plateaued around 0.055
+to 0.060. This divergence, the model continuing to fit the training set without any
+further gain on held-out presets, is the signature of partial memorisation of
+preset-specific spectral patterns rather than a generalised mapping. With only ~42,250
+training samples shared across backbones of 28M and 23M parameters, regularisation through
+greater data diversity is the natural remedy.
 
-The V2 training logs provide converging evidence of a generalisation problem: by epoch
-30 both backbones reach training MAE below 0.020 while validation MAE plateaus around
-0.055 to 0.060. This gap indicates partial memorisation of preset-specific spectral
-patterns rather than a generalised mapping. With only ~42,250 training samples shared
-across backbones of 28M and 23M parameters, regularisation through data diversity is a
-natural remedy. This iteration therefore tests whether rendering each preset at three
-distinct pitches, so the model sees the same parameter vector at three spectral
-positions, activates the FiLM pathway and, combined with SpecAugment, reduces the
-train-to-validation gap.
+Second, the muted FiLM benefit in V2 left the pitch-conditioning question unresolved: it
+was unclear whether the mechanism itself is weak or whether the single-pitch data simply
+gave it nothing to learn from. In V1 and V2 every preset is rendered at exactly one pitch,
+so the model never observes the same parameter vector at different spectral positions;
+each training sample is a unique (spectrogram, parameters) pair. In this setting a model
+can minimise training loss by associating absolute spectral patterns with parameter
+values, using the pitch-dependent position of harmonics as an implicit shortcut, so the
+FiLM pathway receives no pressure to modulate features by pitch because pitch-independent
+spectral matching already suffices. Rendering each preset at several pitches is therefore
+needed to give the FiLM pathway a genuine training signal and to test it properly.
+
+Third, the V2 ranking placed the AST backbone behind ConvNeXt, which is consistent with
+Transformers being known to be data-hungry: self-attention has a weaker inductive bias
+than convolution and typically needs more data before it pays off. A substantially larger
+dataset is needed to see whether AST can realise its potential at this task.
+
+These three concerns motivate two coordinated changes. The dataset is expanded by
+re-rendering each preset at three distinct pitches, which simultaneously diversifies the
+training distribution (addressing overfitting), supplies the cross-pitch variation the
+FiLM pathway requires, and provides the larger data scale that Transformers benefit from.
+In addition, SpecAugment is introduced as an online regulariser so that the resulting
+models generalise better and their evaluation can be trusted as a reflection of genuine
+learning rather than memorisation.
 
 ## 4.2 Solution Design
+
+Both interventions in this iteration introduce concepts not used before, and the
+evaluation relies on a perceptual metric defined for the first time here. They are
+summarised in the box below before the design is described.
+
+> **Concepts used in this iteration.** LaTeX note: render as a short shaded callout, in
+> the same style as the section-opening Key Concepts box and the Iteration 3 concepts box.
+> Depends on a new label `\label{ssub:specaugment}` to be added after the
+> `\subsubsubsection{SpecAugment}` heading in `2-background-and-literature-review.tex`, and
+> reuses `\label{eq:mss}` already defined for the MSS equation in the Methodology section.
+>
+> - **Multi-pitch rendering** — the V3 data-regime change in which each preset is rendered
+>   at several fixed MIDI pitches instead of one, so the same parameter vector appears
+>   paired with several spectrally distinct clips. Specific to this work.
+> - **SpecAugment** *(see Section [REF: ssub:specaugment])* — a spectrogram augmentation
+>   that randomly blanks out strips along the time and frequency axes of the input during
+>   training, acting as "dropout for spectrograms" to discourage over-reliance on any
+>   single time slice or frequency band. Introduced in the Background.
+> - **MSS (Multi-Scale Spectral loss)** *(see Section [REF: eq:mss])* — a perceptual
+>   evaluation metric that re-renders the predicted parameters through Vital and measures
+>   the spectral distance between the original and re-rendered audio across several FFT
+>   window sizes. It complements the parameter-space MAE by asking whether predictions
+>   actually sound close, and it is used for evaluation only, never as a training loss.
 
 The V3 solution redesigns the data regime. Each of the ~42,250 presets is re-rendered at
 up to three fixed pitches per timbre, chosen to cover the low, mid, and high registers of
@@ -766,7 +806,8 @@ which is typical. After silence filtering the corpus reaches ~168,000 samples.
 **SpecAugment.** Each training tensor is augmented with two time masks (width drawn from
 U[0, 30] frames) and two frequency masks (width from U[0, 15] bins), applied identically
 across the three channel slices to preserve inter-channel consistency, with masked
-values set to the global minimum. SpecAugment is disabled at validation and test time.
+values set to 0.0, which is approximately the mean of the Z-scored input. SpecAugment is
+disabled at validation and test time.
 
 **Preset-level split.** The ~42,250 presets are stratified by timbre and split 80/10/10
 at the preset level, all renders following their preset's assignment, giving ~134,400
@@ -776,10 +817,19 @@ five-fold, owing to the cost of training two backbones on this corpus for forty 
 **Training configuration.** The architecture and hyperparameters are identical to V2;
 SpecAugment is active only on the training partition.
 
-**MSS evaluation protocol.** Both V2 and V3 models are evaluated on the shared 100-sample
-set with an MSS loss complementing parameter MAE: each predicted vector is rendered
-through Vital and the mean absolute difference of log-magnitude spectrograms is computed
-across four FFT scales (128, 512, 2,048, 8,192). MSS is not optimised during training.
+**MSS evaluation protocol.** Both V2 and V3 models are evaluated with an MSS loss
+complementing parameter MAE, but on a deliberately small shared set of only 100 held-out
+samples because the MSS pipeline is expensive. Computing MSS for one sample is not a
+simple tensor operation: the model's normalised prediction must be denormalised, each
+value mapped back to its physical unit (for example semitones or seconds), and then
+snapped to a valid setting since most of the studied parameters are discrete in Vital;
+the resulting preset is rendered through Vital via Pedalboard, the output audio recorded,
+and only then is the mean absolute difference of log-magnitude spectrograms computed
+across four FFT scales (128, 512, 2,048, 8,192) against the original. Each sample
+therefore triggers a full Vital re-render, which is heavy in both time and compute, so the
+evaluation set was capped at 100 samples to keep the MSS sweep over all V2 and V3 models
+tractable. The same 100 samples are reused for every model so MAE and MSS are directly
+comparable across versions. MSS is never optimised during training.
 
 **Ablation.** The FiLM versus no-pitch comparison from V2 is repeated under the V3
 regime, yielding four models; the change in the FiLM gap from V2 to V3 is the primary
@@ -787,32 +837,19 @@ test of the multi-pitch hypothesis.
 
 ## 4.5 Solution Evaluation
 
+This phase reports only the headline outcome of the iteration; the full results, tables,
+and per-parameter and perceptual analyses are presented in the Results and Findings
+section (Section 5), all computed on the shared 100-sample evaluation set described above.
+
 Multi-pitch rendering and SpecAugment together produce the largest iteration-over-
-iteration improvement in the study. The best V3 model, AST-small with FiLM, reaches
-0.0525 MAE on the shared evaluation set against 0.0713 for the corresponding V2 model, a
-26% reduction, and both V3 models surpass all V2 models by a clear margin, confirming
-that data scale and pitch diversity were the primary bottleneck.
-
-The central V3 hypothesis is confirmed by the FiLM gap. In V2, FiLM gave 0.0016
-(ConvNeXt) and 0.0014 (AST) improvements; in V3 the gap widens to 0.0020 for ConvNeXt
-(3.6%) and 0.0035 for AST (6.3%). The wider gap confirms that multi-pitch data enhances
-pitch conditioning: forced to observe the same parameter vector at several spectral
-positions, the FiLM pathway receives stronger signal and learns more expressive
-modulations. The modest but non-zero V2 benefit indicates the pathway was already
-partially active on single-pitch data, with cross-pitch diversity amplifying it.
-
-A second finding is the reversal of the ConvNeXt versus AST ranking. In V1 and V2
-ConvNeXt led, but in V3 AST overtakes it on both MAE (0.0525 vs 0.0530) and MSS (1.096
-vs 1.222). This inversion is consistent with the scaling behaviour of transformers: with
-sufficient data, global self-attention captures inter-frequency dependencies such as
-harmonic structure that local convolutions model less efficiently.
-
-The MSS metric corroborates the MAE results. AST-small with FiLM achieves the lowest
-average MSS across all configurations (1.096), with the improvement consistent across all
-four FFT scales. Because MSS is computed through Vital re-rendering and is never
-optimised during training, this agreement between parameter-space MAE and perceptual
-spectral distance confirms that the estimation improvements translate into audibly
-closer reproductions.
+iteration improvement in the study: V3 performs substantially better than V2 across every
+model variant, confirming that data scale and pitch diversity, not the architecture, were
+the dominant bottleneck. The best V3 model is AST-small with FiLM, which moves the
+ConvNeXt-versus-AST ranking: the AST backbone, behind ConvNeXt in V1 and V2, overtakes it
+in V3, consistent with the expectation that the data-hungry Transformer benefits most from
+the enlarged dataset. The FiLM pathway also becomes more effective under multi-pitch data,
+and the same trend holds on the perceptual MSS metric. These findings are quantified in
+full in Section 5.
 
 Collectively the four iterations answer the research questions posed in the introduction:
 Iteration 1 delivers a leak-free, musically representative dataset; Iteration 2

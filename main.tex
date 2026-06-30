@@ -63,6 +63,15 @@
 % Include the list of figures, which lists all the figures in your project.
 
 \phantomsection
+\makeatletter
+\section*{\listequationsname}
+\addcontentsline{toc}{section}{\listequationsname}
+\@starttoc{loe}
+\makeatother
+\clearpage
+% Include the list of equations, which lists all named equations in your project.
+
+\phantomsection
 \input{Preliminary Files/abbreviations}
 \clearpage
 
