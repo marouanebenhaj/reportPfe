@@ -19,7 +19,7 @@ The artifact in this study is a supervised regression system: a neural network t
 
 \par \vspace{0.3cm}
 \noindent
-The three experimental iterations, V1, V2, and V3, each correspond to a complete DSR cycle. V1 established a working baseline and identified ConvNeXt as the strongest backbone. V2 introduced multi-scale mel input, FiLM pitch conditioning, and a grouped prediction head, then ran a controlled ablation to measure each component's contribution individually. V3 responded to a concrete finding from V2: pitch conditioning had almost no measurable effect when every preset was rendered at only one MIDI pitch. Expanding the dataset to three pitches per preset was a direct response to that failure. That feedback loop, where an evaluation result reshapes the next design rather than confirming a prior assumption, is the DSR cycle in practice.
+The work is organized as four successive DSR iterations, each a complete cycle in its own right, presented in full in Section~\ref{sec:iterations}. The first iteration is foundational: it constructs the artifact on which every later iteration depends, namely the data generation pipeline that produces the labelled corpus of audio clips paired with the exact parameter vectors that generated them. The remaining three iterations form a refinement chain over the predictive model. Iteration 2 (V1) established a working baseline and identified ConvNeXt as the strongest backbone. Iteration 3 (V2) introduced multi-scale mel input, FiLM pitch conditioning, and a grouped prediction head, then ran a controlled ablation to measure each component's contribution individually. Iteration 4 (V3) responded to a concrete finding from V2: pitch conditioning had almost no measurable effect when every preset was rendered at only one MIDI pitch, so the dataset was expanded to several pitches per preset as a direct response to that failure. That feedback loop, where an evaluation result reshapes the next design rather than confirming a prior assumption, is the DSR cycle in practice.
 
 \subsection{Design Science Research Iterations}
 
@@ -41,8 +41,8 @@ The DSR process is structured around five interrelated phases, as illustrated in
 \node[dsrbox, fill=orange!80, text=white]   (prob)   at (90:3.0cm)   {Problem\\Investigation};
 \node[dsrbox, fill=teal!65, text=white]     (design) at (20:3.0cm)   {Solution Design};
 \node[dsrbox, fill=teal!50, text=white]     (valid)  at (-35:3.0cm)  {Design Validation};
-\node[dsrbox, fill=blue!55, text=white]     (impl)   at (-110:3.0cm) {Implementation};
-\node[dsrbox, fill=blue!70, text=white]     (eval)   at (180:3.0cm)  {Evaluation};
+\node[dsrbox, fill=blue!55, text=white]     (impl)   at (-110:3.0cm) {Design\\Implementation};
+\node[dsrbox, fill=blue!70, text=white]     (eval)   at (180:3.0cm)  {Solution\\Evaluation};
 
 \end{tikzpicture}
 \vspace{0.4cm}
@@ -59,11 +59,11 @@ The DSR process is structured around five interrelated phases, as illustrated in
 \hline
 \textbf{DSR Phase} & \textbf{Activity in this study} & \textbf{Output} & \textbf{Reported in} \\
 \hline
-Problem Investigation  & Literature review; gap analysis; formulation of research questions RQ1--RQ3 & Research questions; literature gap table & Sections 1, 2 \\
-Solution Design        & Dataset strategy; input representation; architecture and training objective design & V1, V2, V3 design specifications & Section 4 \\
-Design Validation      & Architecture correctness checks; V2 controlled ablation study isolating each component & Per-component MAE impact; ablation results & Sections 4, 5 \\
-Solution Implementation & V1$\to$V2$\to$V3 model training across cross-validation splits & Trained model checkpoints & Section 4 \\
-Solution Evaluation    & MAE and MSS evaluation on held-out test sets; per-parameter breakdown; architecture comparison & Results tables; analysis & Section 5 \\
+Problem Investigation  & Literature review and gap analysis; per-iteration investigation of the limitation carried over from the previous evaluation & Research questions; literature gap table; per-iteration problem statements & Sections 1, 2, 4 \\
+Solution Design        & Data pipeline strategy; input representation; architecture and training objective design & Data pipeline and V1--V3 design specifications & Section 4 \\
+Design Validation      & Internal validity, trade-off, and external validity checks per iteration; V2 controlled ablation isolating each component & Pre-flight design checks; ablation design & Sections 4, 5 \\
+Design Implementation & Dataset construction; V1$\to$V2$\to$V3 model training across cross-validation splits & Labelled corpus; trained model checkpoints & Section 4 \\
+Solution Evaluation    & MAE and MSS evaluation on held-out test sets; per-parameter breakdown; architecture comparison & Results tables; analysis & Sections 4, 5 \\
 \hline
 \end{tabular}
 \vspace{0.3cm}
@@ -102,13 +102,10 @@ The literature review in Section 2 surveyed inverse synthesis, audio deep learni
 
 \subsubsection{Design Validation}
 
-Validation in this project operates at two levels: comparing iterations against each other, and isolating individual components within an iteration.
+Design Validation in this study is a pre-flight check: before committing the compute required to train a full iteration, each iteration's design is examined to confirm that it is sound and that its eventual evaluation will be trustworthy. Following Wieringa's framing \cite{wieringa2014design}, every iteration in Section~\ref{sec:iterations} addresses the same three knowledge questions: \textit{internal validity} (does the artifact behave as designed?), \textit{trade-offs} (what does each design choice cost, and is the balance acceptable?), and \textit{external validity} (will the resulting conclusions generalize beyond the specific configuration tested?). The checks range from confirming that adapted backbone stems produce activations of the correct shape, through the deliberate compromise of rendering every clip from a single note-on with no note-off, to verifying that the dataset splits are free of preset-level leakage. No performance numbers are reported in this phase; measuring how much each design choice actually helps is the task of Solution Evaluation.
 
 \par \vspace{0.3cm}
-\noindent At the iteration level, each experimental increment is validated by comparing training and test MAE before and after the change. V1 establishes the reference: CNN, ConvNeXt, and AST are trained on single-scale mel spectrograms with sinusoidal pitch concatenation, and both training and test MAE are recorded for each. V2 introduces three architectural changes simultaneously — multi-scale mel input, FiLM pitch conditioning, and the grouped prediction head — and the same metrics are recorded for ConvNeXt and AST. The V1-to-V2 MAE gap measures the combined effect of those architectural innovations. V3 then changes the data rather than the architecture, introducing multi-pitch rendering and SpecAugment, and the V2-to-V3 gap measures the effect of the expanded and augmented dataset.
-
-\par \vspace{0.3cm}
-\noindent At the component level, a controlled ablation study within V2 isolates the contribution of each architectural innovation. The logic is straightforward: start with the full V2 model with all components active, then for each variant, disable or simplify exactly one component and measure how much the test MAE degrades. The gap between the full model and a variant directly quantifies what that component contributes. All variants use ConvNeXt-tiny as the backbone and are trained under identical conditions. Table~\ref{tab:ablation_design} lists the five variants.
+\noindent A central validation instrument, introduced in Iteration 3 (V2), is a controlled ablation study that isolates the contribution of each architectural component. Starting from the full V2 model with all components active, each variant disables or simplifies exactly one component, so that the gap between the full model and a variant directly quantifies what that component contributes. All variants use ConvNeXt-tiny as the backbone and are trained under identical conditions. Table~\ref{tab:ablation_design} lists the five variants; their measured results are reported in Section~\ref{sec:results}.
 
 \begin{table}[H]
 \centering
@@ -130,9 +127,9 @@ Uniform loss weight  & The $2\times$ oscillator group weight removed; all parame
 \end{table}
 
 \par \vspace{0.3cm}
-\noindent A third validation axis is provided by the Multi-Scale Spectral (MSS) loss. After training is complete, V2 and V3 models are evaluated on the same shared 100-sample test set by re-rendering their predicted parameters through Vital and measuring the spectral distance between the original and re-rendered audio. This provides a perceptual quality measure that is independent of the parameter-space MAE and captures whether the predicted parameters actually reproduce the target sound.
+\noindent Beyond the parameter-space MAE, the designs are assessed on a complementary perceptual axis. The Multi-Scale Spectral (MSS) loss re-renders the predicted parameters through Vital and measures the spectral distance between the original and re-rendered audio on a shared 100-sample test set, capturing whether the predicted parameters actually reproduce the target sound rather than merely sitting close in the normalized parameter space. This metric is defined in full in the Solution Evaluation phase below.
 
-\subsubsection{Solution Implementation}
+\subsubsection{Design Implementation}
 
 \noindent \textbf{V1.} A dataset of single-scale mel spectrograms was generated, one per audio clip at the mid scale. Three backbone families were trained and compared under identical conditions: a custom residual CNN, ConvNeXt-tiny, and AST-small. Each backbone was tested both with and without a sinusoidal pitch embedding appended to the backbone features via concatenation. Training and test MAE were recorded for each configuration.
 
@@ -140,7 +137,7 @@ Uniform loss weight  & The $2\times$ oscillator group weight removed; all parame
 \noindent \textbf{V2.} Three architectural changes were introduced: three-channel multi-scale mel input stacking fine, mid, and coarse spectrograms; FiLM pitch conditioning replacing the concatenation-based approach; and a grouped prediction head with 2$\times$ loss weighting on oscillator parameters. The CNN was dropped and only ConvNeXt-tiny and AST-small were carried forward. The five ablation variants described in Section~\ref{sec:methodology} were trained alongside the main models.
 
 \par \vspace{0.3cm}
-\noindent \textbf{V3.} The model architecture was kept identical to V2. The dataset was expanded by rendering each preset at three fixed MIDI pitches per timbre rather than one, growing the total from approximately 42{,}000 to 127{,}000 samples. SpecAugment was added during training, randomly masking strips along the time and frequency axes of the mel spectrogram at each iteration.
+\noindent \textbf{V3.} The model architecture was kept identical to V2. The dataset was expanded by rendering each preset at up to three fixed MIDI pitches per timbre rather than one, growing the total from approximately 42{,}250 to 168{,}000 samples after silence filtering. SpecAugment was added during training, randomly masking strips along the time and frequency axes of the mel spectrogram at each iteration.
 
 \subsubsection{Solution Evaluation}
 
@@ -154,7 +151,7 @@ The primary evaluation metric is MAE in the normalised parameter space. After mi
 \noindent where $x_{i,k}$ is the ground-truth normalised value of parameter $k$ for sample $i$ and $\hat{x}_{i,k}$ is the model's prediction.
 
 \par \vspace{0.3cm}
-\noindent Results are reported as mean $\pm$ standard deviation across five independent cross-validation splits, each using a different random seed to assign presets to train, validation, and test sets in an 80/10/10 ratio stratified by timbre and pitch register. In V3, the split is done at preset level: all three pitch renderings of the same preset go into the same partition, so the model is never evaluated on a pitch variant of a preset it trained on. Reporting across five splits shows how much the result depends on which presets end up in the test set, rather than presenting a single run that may have been lucky or unlucky.
+\noindent Results are reported as mean $\pm$ standard deviation across five independent cross-validation splits, each using a different random seed to assign presets to train, validation, and test sets in an 80/10/10 ratio stratified by timbre and pitch register. In V3, the split is done at preset level: all renderings of the same preset go into the same partition, so the model is never evaluated on a pitch variant of a preset it trained on. Reporting across five splits shows how much the result depends on which presets end up in the test set, rather than presenting a single run that may have been lucky or unlucky.
 
 \par \vspace{0.3cm}
 \noindent Per-parameter MAE is reported separately for each of the 16 parameters on the best-performing split. This breaks the global average down into individual errors, making it possible to see which parameters the model predicts consistently well and which it struggles with. Oscillator wave frame parameters are expected to be harder to predict than envelope times, and the per-parameter breakdown makes this gap explicit.

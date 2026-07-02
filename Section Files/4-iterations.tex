@@ -498,22 +498,16 @@ p = \frac{\text{midi\_note} - 12}{84 - 12}
 \subsubsection{Design Validation}
 
 \noindent
-Before committing to the full multi-hour rendering run, the pipeline design was checked against the five requirements set out in the problem investigation.
+Before committing to the full multi-hour rendering run, the pipeline design was checked against the five requirements set out in the problem investigation, organised under three knowledge questions: internal validity, trade-offs, and external validity.
 
 \par \vspace{0.3cm}
-\noindent\textbf{Audibility (internal validity).} The timbre-constrained ranges were designed so that any draw within a category's bounds yields an audible sound of that category, with the percussive constraints in particular forcing a non-trivial onset. The hybrid silence rule was designed to preserve transient and percussive clips that a mean-energy rule would wrongly discard, so that legitimate short-onset sounds survive filtering. The discrete snapping in Step 1 ensures that every recorded target is a value Vital can actually realise, so the model is never asked to predict an unrealisable parameter.
-
-\par \vspace{0.3cm}
-\noindent\textbf{Rendering correctness (manual listening check).} To confirm that the automated rendering path actually produces the sound dictated by the recorded parameters, three presets drawn from the generated dataset were verified by ear: the stored parameter values were entered manually into Vital, the same MIDI note was played, and the result was compared against the corresponding dataset clip. In each case the manually reproduced sound matched the rendered clip, confirming that the audio corresponds to its stored parameters and pitch rather than to a mismatched or corrupted configuration. Because every preset is rendered through the identical automated path, verifying a handful of presets in this way provides confidence that the path is faithful across the dataset as a whole.
-
-\par \vspace{0.3cm}
-\noindent\textbf{Leakage freedom (external validity).} The preset-level grouping in Step 6 (Equation~\ref{eq:preset_key}) guarantees that every render of a given preset is confined to a single partition. A post-split check confirmed zero preset-identifier overlap between the training and test partitions, so evaluation reflects generalisation to unseen presets rather than to unseen pitch renderings of known presets. The stratified bucket key (Equation~\ref{eq:bucket}) was verified to place every timbre and every pitch register into all three partitions in proportional numbers, so the evaluation sets are musically representative of the training distribution.
-
-\par \vspace{0.3cm}
-\noindent\textbf{Perceptual fidelity of targets.} Logarithmic normalization of the envelope times (Equation~\ref{eq:lognorm}) was adopted because a 10\,ms and a 100\,ms attack are as perceptually distinct as a 100\,ms and a 1{,}000\,ms attack; equal spacing in log space therefore represents equal perceptual steps better than equal spacing in linear time, keeping the regression target aligned with perceived differences.
+\noindent\textbf{Internal Validity.} The timbre-constrained ranges were designed so that any draw within a category's bounds yields an audible sound of that category, with the percussive constraints in particular forcing a non-trivial onset; the hybrid silence rule preserves transient and percussive clips that a mean-energy rule would wrongly discard, so that legitimate short-onset sounds survive filtering; and the discrete snapping in Step 1 ensures that every recorded target is a value Vital can actually realise, so the model is never asked to predict an unrealisable parameter. To confirm that the automated rendering path actually produces the sound dictated by the recorded parameters, three presets drawn from the generated dataset were verified by ear: the stored parameter values were entered manually into Vital, the same MIDI note was played, and the result was compared against the corresponding dataset clip. In each case the manually reproduced sound matched the rendered clip, confirming that the audio corresponds to its stored parameters and pitch rather than to a mismatched or corrupted configuration; because every preset is rendered through the identical automated path, verifying a handful of presets in this way provides confidence that the path is faithful across the dataset as a whole. Finally, logarithmic normalization of the envelope times (Equation~\ref{eq:lognorm}) was adopted because a 10\,ms and a 100\,ms attack are as perceptually distinct as a 100\,ms and a 1{,}000\,ms attack, so that equal spacing in log space represents equal perceptual steps and keeps the regression target aligned with perceived differences.
 
 \par \vspace{0.3cm}
 \noindent\textbf{Trade-offs.} Two deliberate compromises shape the dataset. First, every clip is rendered from a single note-on with no note-off over a fixed four-second window. This guarantees a consistent, fully-observable amplitude envelope for every sample, but it leaves the sustain and release stages untriggered and therefore unobservable; the two corresponding parameters are consequently excluded from the sixteen studied, trading parameter coverage for a clean and uniform observable signal. Second, V3 uses a single preset-level split rather than the five stratified folds used at the V1/V2 scale (Step 6), trading repeated-split robustness for feasible compute, since training two backbone families on the much larger V3 corpus five times over is impractical within the hardware budget; this is acceptable because the larger corpus substantially reduces the split variance that motivated cross-validation in the first place.
+
+\par \vspace{0.3cm}
+\noindent\textbf{External Validity.} The preset-level grouping in Step 6 (Equation~\ref{eq:preset_key}) guarantees that every render of a given preset is confined to a single partition. A post-split check confirmed zero preset-identifier overlap between the training and test partitions, so evaluation reflects generalisation to unseen presets rather than to unseen pitch renderings of known presets. The stratified bucket key (Equation~\ref{eq:bucket}) was verified to place every timbre and every pitch register into all three partitions in proportional numbers, so the evaluation sets are musically representative of the training distribution. Beyond the present corpus, the pipeline is driven entirely by Vital's exposed parameter schema rather than by any synth-specific assumption, so the same generation, filtering, and feature-extraction stages extend to other VST instruments by substituting their parameter table, which is the basis for the open-source pipeline contribution set out in Section~\ref{sec:introduction}.
 
 % ─────────────────────────────────────────────────────────
 \subsubsection{Design Implementation}
@@ -650,22 +644,23 @@ Both AST and ConvNeXt are initialised from ImageNet-22k pre-trained weights, wit
 \subsubsection{Design Validation}
 
 \noindent
-Before full-scale training, the following validation checks were performed to ensure the correctness of the V1 design:
+Before full-scale training, the V1 design was checked under three knowledge questions: internal validity, trade-offs, and external validity.
 
+\par \vspace{0.3cm}
+\noindent\textbf{Internal Validity.} Two implementation-correctness checks were performed before training:
 \begin{itemize}
-    \item \textbf{Architecture Compatibility:} Single-channel stem adaptation was verified for both AST and ConvNeXt by confirming that the adapted first layer produced activations of the correct spatial shape ($128 \times 224$ feature maps at the input resolution). For AST, the \texttt{dynamic\_img\_size=True} flag was confirmed to handle the non-square $128 \times 224$ input without positional embedding mismatch.
+    \item \textbf{Architecture compatibility:} Single-channel stem adaptation was verified for both AST and ConvNeXt by confirming that the adapted first layer produced activations of the correct spatial shape ($128 \times 224$ feature maps at the input resolution). For AST, the \texttt{dynamic\_img\_size=True} flag was confirmed to handle the non-square $128 \times 224$ input without positional embedding mismatch.
 
-    \item \textbf{Sinusoidal Embedding Numerical Safety:} The log-spaced frequencies $\omega_k = 2^k \pi$ were verified to remain within float32 range at $k = 63$ ($\omega_{63} = 2^{63}\pi \approx 2.9 \times 10^{19}$); because these values enter only as arguments to $\sin$ and $\cos$, no overflow occurs in the embedding vector.
-
-    \item \textbf{Baseline Calibration Against Prior Work:} The AST-small no-pitch configuration approximates the essential setup of Bruford et al.\ \cite{bruford2024ast} — a ViT encoder, single-scale mel spectrogram input, and no pitch conditioning — to provide a reference point against the primary baseline in the literature. The replication is intentionally partial: Bruford et al.\ use a Mean Squared Error (MSE) loss during training and scale their dataset to up to one million samples, both of which are beyond the scope of this study due to computational resource constraints. The AST-small no-pitch result therefore serves as a reference rather than a strict reproduction.
-
-    \item \textbf{Data Split Integrity:} The five-fold stratified splits (Section~\ref{sec:methodology}) were verified to contain no preset identifier shared between any training and test partition, ensuring that evaluation MAE reflects generalisation to unseen presets rather than memorisation.
+    \item \textbf{Sinusoidal embedding numerical safety:} The log-spaced frequencies $\omega_k = 2^k \pi$ were verified to remain within float32 range at $k = 63$ ($\omega_{63} = 2^{63}\pi \approx 2.9 \times 10^{19}$); because these values enter only as arguments to $\sin$ and $\cos$, no overflow occurs in the embedding vector.
 \end{itemize}
 
-\noindent
-These checks confirmed that the six V1 configurations were correctly implemented and that the AST-small no-pitch variant would serve as a valid reference against prior work.
+\par \vspace{0.3cm}
+\noindent\textbf{Trade-offs.} The V1 design space deliberately crosses two heavy pre-trained backbones (AST-small at roughly 22M parameters and ConvNeXt-tiny at roughly 28M) with a lightweight custom CNN (roughly 2M) included only as a reference point, trading exhaustive architecture coverage for a controlled and directly comparable grid. The batch size and base learning rate are set per architecture to fit their different memory footprints into a single comparison, accepting minor protocol variation in exchange for training each backbone at a sensible operating point. The input is held fixed to a single mid-scale spectrogram throughout, deferring the time-frequency resolution trade-off itself to Iteration 3 so that V1 isolates the backbone-and-pitch question first.
 
-\subsubsection{Solution Implementation}
+\par \vspace{0.3cm}
+\noindent\textbf{External Validity.} The AST-small no-pitch configuration approximates the essential setup of Bruford et al.\ \cite{bruford2024ast} — a ViT encoder, single-scale mel spectrogram input, and no pitch conditioning — to provide a reference point against the primary baseline in the literature. The replication is intentionally partial: Bruford et al.\ use a Mean Squared Error (MSE) loss during training and scale their dataset to up to one million samples, both of which are beyond the scope of this study due to computational resource constraints, so the AST-small no-pitch result serves as a reference rather than a strict reproduction. The five-fold stratified splits (Section~\ref{sec:methodology}) were verified to contain no preset identifier shared between any training and test partition, and reporting test MAE as mean $\pm$ standard deviation across the five folds controls for the variance of any single arbitrary split, so the backbone and pitch-conditioning conclusions are not artefacts of one partition.
+
+\subsubsection{Design Implementation}
 
 \noindent
 The following steps describe the technical implementation of the six V1 configurations.
@@ -898,17 +893,25 @@ The FiLM conditioning, grouped head, and weighted loss are formalised in Equatio
 \subsubsection{Design Validation}
 
 \noindent
-The following validation checks were performed before full-scale V2 training:
+Before full-scale V2 training, the design was checked under three knowledge questions: internal validity, trade-offs, and external validity.
 
+\par \vspace{0.3cm}
+\noindent\textbf{Internal Validity.} Four implementation-correctness checks were performed before training:
 \begin{itemize}
-    \item \textbf{Three-Channel Weight Adaptation:} The adapted first-layer weights for the three-channel input were verified to preserve activation magnitudes. Averaging the three RGB weight slices and dividing by three ensures that a spectrogram tensor with values in the same range as an ImageNet image produces activations of the same expected magnitude as the original RGB stem, preventing the need for re-scaling the learning rate.
+    \item \textbf{Three-channel weight adaptation:} The adapted first-layer weights for the three-channel input were verified to preserve activation magnitudes. Averaging the three RGB weight slices and dividing by three ensures that a spectrogram tensor with values in the same range as an ImageNet image produces activations of the same expected magnitude as the original RGB stem, preventing the need for re-scaling the learning rate.
 
-    \item \textbf{FiLM Identity Initialisation:} The FiLM MLP was initialised so that its output weights are zero, producing $\boldsymbol{\gamma}=\mathbf{0}$ and $\boldsymbol{\beta}=\mathbf{0}$ at epoch zero. This ensures that $\tilde{\mathbf{z}} = \mathbf{z}$ at initialisation, meaning V2 training begins from a state equivalent to the V1 no-pitch model, avoiding early-training instability caused by randomly-scaled feature modulations.
+    \item \textbf{FiLM identity initialisation:} The FiLM MLP was initialised so that its output weights are zero, producing $\boldsymbol{\gamma}=\mathbf{0}$ and $\boldsymbol{\beta}=\mathbf{0}$ at epoch zero. This ensures that $\tilde{\mathbf{z}} = \mathbf{z}$ at initialisation, meaning V2 training begins from a state equivalent to the V1 no-pitch model, avoiding early-training instability caused by randomly-scaled feature modulations.
 
-    \item \textbf{Grouped Head Output Consistency:} The four sub-MLP outputs were verified to be concatenated in the correct parameter order (indices 0–6, 7–10, 11–12, 13–15) to produce a 16-dimensional prediction vector, and the final Sigmoid activation was confirmed to bound all outputs to $[0,1]$.
+    \item \textbf{Grouped head output consistency:} The four sub-MLP outputs were verified to be concatenated in the correct parameter order (indices 0–6, 7–10, 11–12, 13–15) to produce a 16-dimensional prediction vector, and the final Sigmoid activation was confirmed to bound all outputs to $[0,1]$.
 
-    \item \textbf{Weighted Loss Gradient Balance:} Training loss logging confirmed that the doubled weight applied to the oscillator group ($w_{\text{osc}}=2$) produces proportionally larger gradients for indices 0–6, without causing gradient magnitude instability for the remaining parameter groups whose weights remain at 1.
+    \item \textbf{Weighted loss gradient balance:} Training loss logging confirmed that the doubled weight applied to the oscillator group ($w_{\text{osc}}=2$) produces proportionally larger gradients for indices 0–6, without causing gradient magnitude instability for the remaining parameter groups whose weights remain at 1.
 \end{itemize}
+
+\par \vspace{0.3cm}
+\noindent\textbf{Trade-offs.} Multi-scale input triples the per-clip mel extraction and storage cost in exchange for the complementary time-frequency views the single mid-scale spectrogram cannot provide. The doubled oscillator weight deliberately biases both model capacity and training signal toward the hardest group, a bias bounded by the fact that the envelope and filter groups already sit well below $0.05$ MAE in V1 and can absorb a reduced share of the objective. The grouped head adds parameters over a flat head, but only modestly, since each of the four sub-MLPs is small relative to the backbone.
+
+\par \vspace{0.3cm}
+\noindent\textbf{External Validity.} The backbone pair (ConvNeXt-tiny and AST-small) is held fixed from V1 and each of the four enhancements is stacked on the identical V1 training recipe, so any change in MAE is attributable to the enhancements rather than to a change of architecture or training schedule; the no-pitch ablation variant introduced under Design Implementation further isolates the contribution of FiLM. This controlled design means the component-level conclusions are expected to hold across both backbone families rather than being specific to a single architecture.
 
 \subsubsection{Design Implementation}
 
@@ -990,7 +993,7 @@ The combined V2 enhancements produce a substantial reduction in MAE. The best V2
 FiLM conditioning provides a small but consistent improvement in the overall average for both backbones: $-0.0016$ MAE for ConvNeXt ($2.4\%$ reduction) and $-0.0014$ for AST ($1.9\%$ reduction), consistent across all five splits in both cases. The effect is, however, sharply concentrated rather than broad: it falls almost entirely on \texttt{osc2\_transpose}, the parameter most directly tied to pitch, whose MAE drops from $0.078$ to $0.062$ under FiLM for ConvNeXt, the largest single-parameter gain of any change in this iteration. Because \texttt{osc2\_transpose} is one parameter among sixteen, this large local gain is diluted into a modest movement of the overall average, while the remaining parameters are largely unaffected by pitch conditioning. On single-pitch data, in other words, FiLM sharpens exactly the one parameter for which pitch is a near-direct cue but does little elsewhere.
 
 \noindent \newline
-Beyond the limited FiLM benefit, both V2 models exhibit clear signs of overfitting: training MAE continues to decrease well below validation MAE, which plateaus around $0.055$–$0.060$ by epoch 30. This train-to-validation gap indicates that the $\approx 42{,}250$-sample dataset is insufficient to fully regularise models of this capacity. This combination of limited FiLM effectiveness and overfitting raises a critical question for Iteration 4: \textit{Is FiLM conditioning inherently insufficient for this task, or does its effectiveness depend on training data that presents the same preset parameter vector at multiple pitch positions — forcing the model to leverage pitch to resolve spectral ambiguity rather than relying solely on absolute spectral position?} To address both weaknesses simultaneously, Iteration 4 re-renders the existing $\approx 42{,}250$ presets at up to three fixed MIDI pitches each, rather than generating new presets. This approach expands the dataset to approximately $168{,}000$ samples after silence filtering while ensuring that the FiLM conditioning pathway receives meaningful cross-pitch variation: the same parameter target $\mathbf{y}$ now appears paired with multiple spectrally distinct inputs, directly testing whether pitch-aware training activates the FiLM pathway.
+Beyond the limited FiLM benefit, both V2 models exhibit clear signs of overfitting: the training loss continues to fall toward zero while the validation MAE stops improving and plateaus around $0.066$–$0.070$ by epoch 30 (ConvNeXt near $0.066$, AST near $0.070$). The divergence of the two curves indicates that the $\approx 42{,}250$-sample dataset is insufficient to fully regularise models of this capacity. This combination of limited FiLM effectiveness and overfitting raises a critical question for Iteration 4: \textit{Is FiLM conditioning inherently insufficient for this task, or does its effectiveness depend on training data that presents the same preset parameter vector at multiple pitch positions — forcing the model to leverage pitch to resolve spectral ambiguity rather than relying solely on absolute spectral position?} To address both weaknesses simultaneously, Iteration 4 re-renders the existing $\approx 42{,}250$ presets at up to three fixed MIDI pitches each, rather than generating new presets. This approach expands the dataset to approximately $168{,}000$ samples after silence filtering while ensuring that the FiLM conditioning pathway receives meaningful cross-pitch variation: the same parameter target $\mathbf{y}$ now appears paired with multiple spectrally distinct inputs, directly testing whether pitch-aware training activates the FiLM pathway.
 
 
 % ═══════════════════════════════════════════════════════════
@@ -1018,7 +1021,7 @@ The fourth iteration addresses the weaknesses identified in the V2 evaluation th
 \subsubsection{Problem Investigation}
 
 \noindent
-The V2 evaluation surfaced three concerns that point to the training data regime rather than the model architecture. The first is overfitting. The quantity optimised during training is the weighted SmoothL1 (Huber) loss, while the metric tracked on the validation set is the mean absolute error; over the V2 run these two curves diverged. The training loss kept falling steadily toward zero, below roughly $0.015$ by the final epochs, while the validation MAE stopped improving and plateaued around $0.055$–$0.060$. This divergence, the model continuing to fit the training set without any further gain on held-out presets, is the signature of partial memorisation of preset-specific spectral patterns rather than a generalised mapping. With only $\approx 42{,}250$ training samples shared across two backbones of 28M and 23M parameters, regularisation through greater data diversity is the natural remedy.
+The V2 evaluation surfaced three concerns that point to the training data regime rather than the model architecture. The first is overfitting. The quantity optimised during training is the weighted SmoothL1 (Huber) loss, while the metric tracked on the validation set is the mean absolute error; over the V2 run these two curves diverged. The training loss kept falling steadily toward zero, below roughly $0.015$ by the final epochs, while the validation MAE stopped improving and plateaued around $0.066$–$0.070$. This divergence, the model continuing to fit the training set without any further gain on held-out presets, is the signature of partial memorisation of preset-specific spectral patterns rather than a generalised mapping. With only $\approx 42{,}250$ training samples shared across two backbones of 28M and 23M parameters, regularisation through greater data diversity is the natural remedy.
 
 \noindent \newline
 The second concern is that the muted FiLM benefit in V2 left the pitch-conditioning question unresolved: it was unclear whether the mechanism itself is weak or whether the single-pitch data simply gave it nothing to learn from. In V1 and V2, every preset is rendered at exactly one MIDI pitch, so the model never observes the same parameter vector $\mathbf{y}$ at different spectral positions; each training sample is a unique (spectrogram, parameters) pair. A model in this setting can minimise the training loss by associating absolute spectral patterns with parameter values, using the pitch-dependent position of harmonics as an implicit shortcut, so the FiLM pathway receives no pressure to modulate features based on pitch because pitch-independent spectral matching already suffices. Rendering each preset at several pitches is therefore needed to give the FiLM pathway a genuine training signal and to test it properly.
@@ -1105,15 +1108,22 @@ Because each preset now contributes multiple training samples (the original V1/V
 
 \subsubsection{Design Validation}
 
+\noindent
+Before full-scale V3 training, the design was checked under three knowledge questions: internal validity, trade-offs, and external validity.
+
+\par \vspace{0.3cm}
+\noindent\textbf{Internal Validity.} Two design-correctness checks confirmed that the data-regime change behaves as intended:
 \begin{itemize}
-    \item \textbf{Preset-Level Split Integrity:} The splitting procedure was verified to assign all three pitch renderings of every preset to the same partition (training, validation, or test). A post-split check confirmed zero preset-ID overlap between the training and validation sets, ensuring that the validation MAE reflects generalisation to unseen presets rather than to unseen pitch renderings of known presets.
+    \item \textbf{SpecAugment parameter selection:} Time mask width was capped at 30 frames ($\approx 3.5$ seconds at mid-scale hop) and frequency mask width at 15 mel bins (out of 128). These limits were selected to ensure that each masked spectrogram retains sufficient spectral content to identify the dominant timbre class, while providing enough stochastic variation to prevent feature co-adaptation.
 
-    \item \textbf{SpecAugment Parameter Selection:} Time mask width was capped at 30 frames ($\approx 3.5$ seconds at mid-scale hop) and frequency mask width at 15 mel bins (out of 128). These limits were selected to ensure that each masked spectrogram retains sufficient spectral content to identify the dominant timbre class, while providing enough stochastic variation to prevent feature co-adaptation.
-
-    \item \textbf{MIDI Note Register Coverage:} The fixed MIDI note schedule per timbre (Table~\ref{tab:v3_midi}) was verified to span the low, mid, and high registers of each timbre's valid range, ensuring that for every timbre class the model encounters pitch variation across at least two octaves during training.
-
-    \item \textbf{Shared Evaluation Protocol:} A fixed set of 100 held-out samples (\texttt{shared\_eval\_set.json}) was constructed from the V1/V2 test set, ensuring that both V2 and V3 models are evaluated on identical audio clips and preset parameter targets. This shared evaluation set enables a direct comparison of MSS values — which require Vital re-rendering — between versions without any confounding differences in evaluation samples.
+    \item \textbf{MIDI note register coverage:} The fixed MIDI note schedule per timbre (Table~\ref{tab:v3_midi}) was verified to span the low, mid, and high registers of each timbre's valid range, ensuring that for every timbre class the model encounters pitch variation across at least two octaves during training.
 \end{itemize}
+
+\par \vspace{0.3cm}
+\noindent\textbf{Trade-offs.} The mask-width caps embody a deliberate balance between augmentation strength and information retention: wide enough to discourage over-reliance on any single time slice or frequency band, yet narrow enough that the dominant timbre remains identifiable. The weight decay is raised from $10^{-4}$ to $5\times10^{-3}$, trading a tighter fit to the training set for stronger regularisation suited to the larger corpus. The perceptual MSS evaluation is capped at 100 shared samples, trading breadth of perceptual coverage for the feasibility of a full Vital re-render per sample.
+
+\par \vspace{0.3cm}
+\noindent\textbf{External Validity.} The splitting procedure was verified to assign all renderings of every preset to the same partition; a post-split check confirmed zero preset-ID overlap between the training and validation sets, so the validation MAE reflects generalisation to unseen presets rather than to unseen pitch renderings of known presets. A fixed set of 100 held-out samples (\texttt{shared\_eval\_set.json}) was constructed from the V1/V2 test set so that both V2 and V3 models are evaluated on identical audio clips and preset parameter targets, enabling a direct comparison of MSS values — which require Vital re-rendering — across versions without any confounding differences in evaluation samples.
 
 \subsubsection{Design Implementation}
 

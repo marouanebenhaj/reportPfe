@@ -97,10 +97,10 @@ panels = [
     (axes[1], v3_tr, v3_val, 'V3 — AST-small + FiLM'),
 ]
 for ax, tr, val, title in panels:
-    ax.plot(ep, tr,  'o-',  color=BLUE_DK,   lw=1.8, ms=4, label='Train MAE')
+    ax.plot(ep, tr,  'o-',  color=BLUE_DK,   lw=1.8, ms=4, label='Train loss (SmoothL1)')
     ax.plot(ep, val, 's--', color=ORANGE_DK, lw=1.8, ms=4, label='Val MAE')
     ax.set_xlabel('Epoch')
-    ax.set_ylabel('MAE')
+    ax.set_ylabel('SmoothL1 loss  /  MAE')
     ax.set_title(title)
     ax.set_xlim(0, 42)
     ax.legend(framealpha=0.95)
@@ -108,7 +108,7 @@ for ax, tr, val, title in panels:
 # shade overfitting gap on V2 panel
 axes[0].fill_between(ep, v2_tr, v2_val,
                      where=[t < v for t, v in zip(v2_tr, v2_val)],
-                     alpha=0.15, color='red', label='Train < Val gap')
+                     alpha=0.15, color='red', label='Train-loss / val-MAE gap')
 axes[0].legend(framealpha=0.95)
 
 fig.tight_layout(rect=[0, 0, 1, 0.96])
@@ -122,8 +122,8 @@ print("OK fig_convergence.pdf")
 # FIG 3 — FiLM Conditioning Gap: V2 vs V3
 # ══════════════════════════════════════════════════════════════════════════════
 groups = ['V2\nConvNeXt', 'V2\nAST-small', 'V3\nConvNeXt', 'V3\nAST-small']
-film_vals    = [0.0665,  0.0713,  0.05296, 0.05248]
-nopitch_vals = [0.0681,  0.0727,  0.05498, 0.05596]
+film_vals    = [0.0665,  0.0713,  0.0530, 0.0525]
+nopitch_vals = [0.0681,  0.0727,  0.0550, 0.0560]
 gaps         = [n - f for f, n in zip(film_vals, nopitch_vals)]
 
 film_cols    = [BLUE_LT,  ORANGE_LT,  BLUE_DK,   ORANGE_DK]
@@ -185,14 +185,14 @@ PARAM_LABELS = [
 ]
 
 v1_pp = {
-    'oscillator_1_wave_frame': 0.1329, 'oscillator_1_level': 0.1165,
-    'oscillator_1_unison_voices': 0.1083, 'oscillator_1_unison_detune': 0.0864,
-    'oscillator_2_wave_frame': 0.1597, 'oscillator_2_level': 0.1305,
-    'oscillator_2_transpose': 0.0951,
-    'envelope_1_attack': 0.0233, 'envelope_1_decay': 0.0196,
-    'envelope_2_attack': 0.0354, 'envelope_2_decay': 0.0276,
-    'filter_1_cutoff': 0.0413, 'filter_1_resonance': 0.0670,
-    'sample_level': 0.0784, 'modulation_1_amount': 0.0352, 'reverb_mix': 0.0467,
+    'oscillator_1_wave_frame': 0.1362, 'oscillator_1_level': 0.1161,
+    'oscillator_1_unison_voices': 0.1067, 'oscillator_1_unison_detune': 0.0869,
+    'oscillator_2_wave_frame': 0.1610, 'oscillator_2_level': 0.1288,
+    'oscillator_2_transpose': 0.0902,
+    'envelope_1_attack': 0.0245, 'envelope_1_decay': 0.0191,
+    'envelope_2_attack': 0.0367, 'envelope_2_decay': 0.0269,
+    'filter_1_cutoff': 0.0415, 'filter_1_resonance': 0.0679,
+    'sample_level': 0.0809, 'modulation_1_amount': 0.0346, 'reverb_mix': 0.0461,
 }
 v2_pp = {
     'oscillator_1_wave_frame': 0.1209, 'oscillator_1_level': 0.0989,
